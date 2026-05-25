@@ -117,10 +117,11 @@ inspectCommand.SetAction(async parseResult =>
     }
 
     var html = await yugipedia.FetchErrataHtmlAsync(name);
-    List<string> erratas;
-    if (html is not null)
-        erratas = await HtmlErrataScraper.ParseErrataTableAsync(html);
-    else
+    List<string> erratas = html is not null
+        ? await HtmlErrataScraper.ParseErrataTableAsync(html)
+        : [];
+
+    if (erratas.Count == 0)
         erratas = [card.Desc];
 
     Console.WriteLine($"Card: {card.Name} ({card.Type})");

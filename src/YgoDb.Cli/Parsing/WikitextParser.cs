@@ -46,7 +46,7 @@ public static partial class WikitextParser
         foreach (var (_, raw) in lores)
         {
             var text = await LoreFullAsync(raw);
-            if (!string.IsNullOrWhiteSpace(text))
+            if (!string.IsNullOrWhiteSpace(text) && !ContainsJapaneseCharacters(text))
                 results.Add(text);
         }
         return results;
@@ -76,4 +76,11 @@ public static partial class WikitextParser
 
     private static string NormaliseWhitespace(string text) =>
         string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+    private static bool ContainsJapaneseCharacters(string text) =>
+        text.Any(c => IsHiragana(c) || IsKatakana(c) || IsKanji(c));
+
+    private static bool IsHiragana(char c) => c is >= '぀' and <= 'ゟ';
+    private static bool IsKatakana(char c) => c is >= '゠' and <= 'ヿ';
+    private static bool IsKanji(char c) => c is >= '一' and <= '鿿';
 }

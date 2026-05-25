@@ -19,4 +19,10 @@ internal static class CardTypeExtensions
         || cardType.Contains("Synchro", StringComparison.OrdinalIgnoreCase)
         || cardType.Contains("XYZ", StringComparison.OrdinalIgnoreCase)
         || cardType.Contains("Link", StringComparison.OrdinalIgnoreCase);
+
+    internal static bool IsToken(this string cardType) =>
+        cardType.Contains("Token", StringComparison.OrdinalIgnoreCase);
+
+    internal static bool IsSkillCard(this string cardType) =>
+        cardType.Contains("Skill", StringComparison.OrdinalIgnoreCase);
 }

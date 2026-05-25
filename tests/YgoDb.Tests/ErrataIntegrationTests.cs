@@ -12,6 +12,7 @@ public sealed class IntegrationData : IAsyncLifetime
         "Luster Pendulum, the Dracoslayer",
         "Stardust Dragon", "Number 39: Utopia", "Elemental HERO Flame Wingman",
         "Aqua Dragon", "Berserker of the Tenyi",
+        "Treasure Map",
     ];
 
     public IReadOnlyDictionary<string, NormalizedRow> Rows => _rows;
@@ -154,6 +155,15 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
         var row = Row("Bujin Hiruko");
         row.ShortestErrata.ShouldBe(row.Desc);
         row.LatestErrata.ShouldBe(row.Desc);
+    }
+
+    [Fact]
+    public void Normalize_TreasureMapJapaneseLoreOnlyCard_FallsBackToDescWith38Words()
+    {
+        var row = Row("Treasure Map");
+        row.WordCount.ShouldBe(38);
+        row.IsEligible.ShouldBeFalse();
+        row.ShortestErrata.ShouldBe(row.Desc);
     }
 
     [Theory]

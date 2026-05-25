@@ -41,10 +41,17 @@ public static class HtmlErrataScraper
 
                 var text = td.TextContent;
                 var normalised = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-                if (!string.IsNullOrEmpty(normalised))
+                if (!string.IsNullOrEmpty(normalised) && !ContainsJapaneseCharacters(normalised))
                     results.Add(normalised);
             }
         }
         return results;
     }
+
+    private static bool ContainsJapaneseCharacters(string text) =>
+        text.Any(c => IsHiragana(c) || IsKatakana(c) || IsKanji(c));
+
+    private static bool IsHiragana(char c) => c is >= '぀' and <= 'ゟ';
+    private static bool IsKatakana(char c) => c is >= '゠' and <= 'ヿ';
+    private static bool IsKanji(char c) => c is >= '一' and <= '鿿';
 }

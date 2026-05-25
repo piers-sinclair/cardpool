@@ -6,7 +6,7 @@ namespace YgoDb.Cli.Export;
 public static class ExcelExporter
 {
     private static readonly HashSet<string> WideColumns =
-        new(["name", "shortest_errata", "latest_errata"], StringComparer.OrdinalIgnoreCase);
+        new(["name", "materials", "shortest_errata", "latest_errata"], StringComparer.OrdinalIgnoreCase);
 
     public static void Export(List<NormalizedRow> rows, string path, int wordLimit)
     {
@@ -65,7 +65,7 @@ public static class ExcelExporter
     private static object?[] GetRowValues(NormalizedRow r) =>
     [
         r.Id, r.Name, r.Type, r.Race, r.Attribute, r.Level, r.Atk, r.Def,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Desc,
+        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Desc, r.Materials,
         r.ShortestErrata, r.LatestErrata, r.WordCount, r.IsEligible,
         r.SetName, r.SetCode, r.SetRarity, r.BanTcg, r.BanOcg, r.ImageUrl
     ];

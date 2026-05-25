@@ -55,7 +55,7 @@ global.json               ← pins .NET SDK version to 10.x
 dotnet run --project src/YgoDb.Cli -- export                         # full, ≤20 words
 dotnet run --project src/YgoDb.Cli -- export --words 25              # full, ≤25 words
 dotnet run --project src/YgoDb.Cli -- export --words 30              # full, ≤30 words
-dotnet run --project src/YgoDb.Cli -- export --no-materials          # strip Extra Deck, ≤20w
+dotnet run --project src/YgoDb.Cli -- export --no-materials          # strip Extra Deck, ≤20w; keeps stripped materials in a separate column
 dotnet run --project src/YgoDb.Cli -- export --no-materials --words 25
 
 # Inspect a single card (replaces inspect_card.py)
@@ -116,6 +116,8 @@ All projects inherit from `Directory.Build.props`:
 - `EnforceCodeStyleInBuild` — code style violations fail the build
 
 **Build must pass with 0 warnings before any commit.**
+
+**No comments** — do not write inline or block comments anywhere in the codebase. Well-named identifiers convey intent; a comment is only justified for a non-obvious external constraint, invariant, or workaround that naming alone cannot express. When in doubt, omit the comment.
 
 ---
 

@@ -69,7 +69,59 @@ public class MaterialStripperTests
 
         result.Desc.ShouldBe("Once per turn, you can draw 1 card.");
         result.ShortestErrata.ShouldBe("Once per turn, you can draw 1 card.");
+        result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
         result.WordCount.ShouldBe(WordCounter.CountEffectiveWords("Once per turn, you can draw 1 card.", "Synchro Monster"));
+    }
+
+    [Fact]
+    public void PostprocessRow_SingleLineSynchroCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "Synchro Monster",
+            Desc = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            ShortestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            LatestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
+    }
+
+    [Fact]
+    public void PostprocessRow_SingleLineFusionCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "Fusion Monster",
+            Desc = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            ShortestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            LatestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("\"Elemental HERO\" monster + 1 FIRE monster");
+    }
+
+    [Fact]
+    public void PostprocessRow_SingleLineXyzCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "XYZ Monster",
+            Desc = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            ShortestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            LatestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("2 Level 4 monsters");
     }
 
     [Fact]
@@ -87,6 +139,7 @@ public class MaterialStripperTests
 
         var result = MaterialStripper.PostprocessRow(row, 20);
         result.Desc.ShouldBe(original);
+        result.Materials.ShouldBeNull();
         result.WordCount.ShouldBe(5);
     }
 

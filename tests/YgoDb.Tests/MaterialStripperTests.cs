@@ -43,10 +43,24 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void StripMaterialLine_MaterialOnlyText_ReturnsOriginal()
+    public void StripMaterialLine_MaterialOnlyText_ReturnsEmpty()
     {
         var text = "2 Level 4 monsters";
-        MaterialStripper.StripMaterialLine(text).ShouldBe(text);
+        MaterialStripper.StripMaterialLine(text).ShouldBe(string.Empty);
+    }
+
+    [Fact]
+    public void StripMaterialLine_AquaDragonNormalFusionMaterials_ReturnsEmpty()
+    {
+        var text = "\"Fairy Dragon\" + \"Amazon of the Seas\" + \"Zone Eater\"";
+        MaterialStripper.StripMaterialLine(text).ShouldBe(string.Empty);
+    }
+
+    [Fact]
+    public void StripMaterialLine_BerserkerOfTenyiLinkMaterial_ReturnsEmpty()
+    {
+        var text = "2+ monsters, including a Link Monster";
+        MaterialStripper.StripMaterialLine(text).ShouldBe(string.Empty);
     }
 
     [Fact]
@@ -158,5 +172,45 @@ public class MaterialStripperTests
 
         var result = MaterialStripper.PostprocessRow(row, 20);
         result.Desc.ShouldBe(original);
+    }
+
+    [Fact]
+    public void PostprocessRow_AquaDragonNormalFusion_StripsToEmptyAndZeroWords()
+    {
+        var formula = "\"Fairy Dragon\" + \"Amazon of the Seas\" + \"Zone Eater\"";
+        var row = new NormalizedRow
+        {
+            Type = "Fusion Monster",
+            Desc = formula,
+            ShortestErrata = formula,
+            LatestErrata = formula,
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Desc.ShouldBe(string.Empty);
+        result.WordCount.ShouldBe(0);
+        result.IsEligible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PostprocessRow_BerserkerOfTenyiLinkMaterial_StripsToEmptyAndZeroWords()
+    {
+        var formula = "2+ monsters, including a Link Monster";
+        var row = new NormalizedRow
+        {
+            Type = "Link Monster",
+            Desc = formula,
+            ShortestErrata = formula,
+            LatestErrata = formula,
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Desc.ShouldBe(string.Empty);
+        result.WordCount.ShouldBe(0);
+        result.IsEligible.ShouldBeTrue();
     }
 }

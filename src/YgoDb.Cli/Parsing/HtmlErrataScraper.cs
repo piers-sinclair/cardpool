@@ -3,12 +3,10 @@ using AngleSharp.Dom;
 
 namespace YgoDb.Cli.Parsing;
 
-/// <summary>
-/// Parses Yugipedia errata HTML (action=parse endpoint) for the inspect command.
-/// Uses the simpler td_to_text approach: decompose del tags only (keeps ins content).
-/// </summary>
 public static class HtmlErrataScraper
 {
+    private const string EnglishSectionHeading = "English";
+
     private static readonly IBrowsingContext BrowsingContext =
         AngleSharp.BrowsingContext.New(Configuration.Default);
 
@@ -17,7 +15,7 @@ public static class HtmlErrataScraper
         var doc = await BrowsingContext.OpenAsync(req => req.Content(html));
 
         var englishHeading = doc.QuerySelectorAll("h2, h3")
-            .FirstOrDefault(h => h.TextContent.Trim().Equals("English", StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(h => h.TextContent.Trim().Equals(EnglishSectionHeading, StringComparison.OrdinalIgnoreCase));
 
         IElement? table = null;
         if (englishHeading != null)

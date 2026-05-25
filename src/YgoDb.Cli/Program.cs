@@ -6,7 +6,6 @@ using YgoDb.Cli.WordCount;
 
 var rootCommand = new RootCommand("YgoDb — Yu-Gi-Oh! card database export tool");
 
-// ── export ──────────────────────────────────────────────────────────────────
 var exportCommand = new Command("export", "Export card data to Excel/CSV");
 
 var wordsOption = new Option<int>("--words")
@@ -23,6 +22,7 @@ var noMaterialsOption = new Option<bool>("--no-materials")
 exportCommand.Add(wordsOption);
 exportCommand.Add(noMaterialsOption);
 
+const string OutputDirectory = "output";
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
@@ -32,10 +32,10 @@ exportCommand.SetAction(async parseResult =>
         ? words == 20 ? "no_materials_export" : $"no_materials_{words}words_export"
         : words == 20 ? "full_export" : $"full_{words}words_export";
 
-    Directory.CreateDirectory("output");
+    Directory.CreateDirectory(OutputDirectory);
     await ExportPipeline.RunAsync(
-        $"output/{suffix}.xlsx",
-        $"output/{suffix}.csv",
+        $"{OutputDirectory}/{suffix}.xlsx",
+        $"{OutputDirectory}/{suffix}.csv",
         wordLimit: words,
         rowPostprocess: noMaterials
             ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
@@ -44,7 +44,6 @@ exportCommand.SetAction(async parseResult =>
 
 rootCommand.Add(exportCommand);
 
-// ── inspect ──────────────────────────────────────────────────────────────────
 var inspectCommand = new Command("inspect", "Show errata history for a single card");
 
 var cardNameArg = new Argument<string>("card-name")
@@ -85,7 +84,7 @@ inspectCommand.SetAction(async parseResult =>
     for (var i = 0; i < erratas.Count; i++)
     {
         var t = erratas[i];
-        var wc = card.Type.Equals("Normal Monster", StringComparison.OrdinalIgnoreCase)
+        var wc = card.Type.IsPureNormalMonster()
             ? 0
             : WordCounter.CountWords(t);
 

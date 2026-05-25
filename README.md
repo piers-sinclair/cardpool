@@ -1,4 +1,4 @@
-# ygodb
+# YgoDb
 
 Yu-Gi-Oh! card database tool for Edison format play. Fetches ~12,000 cards from [YGOProDeck](https://ygoprodeck.com/), enriches them with errata history from [Yugipedia](https://yugipedia.com/), and exports to Excel/CSV.
 
@@ -6,49 +6,77 @@ The core purpose: identify cards whose **shortest known errata version** falls w
 
 ---
 
-## Scripts
+## Requirements
 
-| Script | Purpose | Output | Runtime |
-|--------|---------|--------|---------|
-| `export_full.py` | Full export at **≤20 words**. Fetches all cards with Yugipedia errata data. | `output/full_export.xlsx/.csv` | ~2–4 min |
-| `export_no_materials.py` | Same as `export_full` but strips the material requirement line from Extra Deck monsters. Word counts reflect effect text only. | `output/no_materials_export.xlsx/.csv` | ~2–4 min |
-| `export_25words.py` | Full export at **≤25 words**. | `output/full_25words_export.xlsx/.csv` | ~2–4 min |
-| `export_no_materials_25words.py` | No-materials export at **≤25 words**. | `output/no_materials_25words_export.xlsx/.csv` | ~2–4 min |
-| `export_30words.py` | Full export at **≤30 words**. | `output/full_30words_export.xlsx/.csv` | ~2–4 min |
-| `export_no_materials_30words.py` | No-materials export at **≤30 words**. | `output/no_materials_30words_export.xlsx/.csv` | ~2–4 min |
-| `inspect_card.py` | Single-card errata inspector. Prints all English errata versions with word counts, then saves a summary. | `output/{CardName}_erratas.xlsx/.csv` | Seconds |
-| `core.py` | Shared logic used by the export scripts. Not run directly. | — | — |
-| `tests.py` | Regression test suite verifying errata parsing and word counting against 11 known-tricky cards. | — | ~30 sec |
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ---
 
 ## Usage
 
 ```bash
-python export_full.py
-python export_no_materials.py
-python export_25words.py
-python export_no_materials_25words.py
-python export_30words.py
-python export_no_materials_30words.py
-python inspect_card.py "Blue-Eyes White Dragon"
-python tests.py
+# Full export at ≤20 words (default)
+dotnet run --project src/YgoDb.Cli -- export
+
+# Change the word-count threshold
+dotnet run --project src/YgoDb.Cli -- export --words 25
+dotnet run --project src/YgoDb.Cli -- export --words 30
+
+# Strip material requirements from Extra Deck monsters
+dotnet run --project src/YgoDb.Cli -- export --no-materials
+dotnet run --project src/YgoDb.Cli -- export --no-materials --words 25
+
+# Inspect a single card's errata history
+dotnet run --project src/YgoDb.Cli -- inspect "Raiza the Storm Monarch"
+
+# Run unit tests
+dotnet test tests/YgoDb.Tests --filter "Category!=Integration"
+
+# Run live API regression tests (~5 min)
+dotnet test tests/YgoDb.Tests --filter "Category=Integration"
 ```
 
 All outputs go to the `output/` directory (created automatically).
 
-To use a custom word-count threshold from code, pass `word_limit` to `run_export`:
+---
 
-```python
-from core import run_export
-run_export("output/custom.xlsx", "output/custom.csv", word_limit=35)
+## Architecture
+
+```mermaid
+flowchart TD
+    CLI["Program.cs\n(System.CommandLine)"]
+    EP["ExportPipeline"]
+    YGO["YgoProDeckClient\n(HTTP)"]
+    YUG["YugipediaClient\n(HTTP + rate limit)"]
+    CN["CardNormalizer"]
+    MS["MaterialStripper\n(--no-materials)"]
+    WC["WordCounter"]
+    WTP["WikitextParser\n(AngleSharp)"]
+    XL["ExcelExporter\n(ClosedXML)"]
+    CSV["CsvExporter\n(CsvHelper)"]
+    OUT[("output/*.xlsx\noutput/*.csv")]
+    HES["HtmlErrataScraper\n(AngleSharp)"]
+
+    CLI -->|export| EP
+    EP --> YGO
+    EP --> YUG
+    YUG --> WTP
+    EP --> CN
+    CN --> WC
+    EP -->|"--no-materials"| MS
+    MS --> WC
+    EP --> XL
+    EP --> CSV
+    XL --> OUT
+    CSV --> OUT
+    CLI -->|inspect| YGO
+    CLI -->|inspect| YUG
+    YUG -->|inspect| HES
 ```
 
 ---
 
 ## Output Columns
-
-All export scripts produce these columns:
 
 | Column | Description |
 |--------|-------------|
@@ -59,7 +87,7 @@ All export scripts produce these columns:
 | `shortest_errata` | The errata version with the fewest words; falls back to `desc` if no Yugipedia page exists |
 | `latest_errata` | The most recent errata version; falls back to `desc` |
 | `word_count` | Effective word count of `shortest_errata`, applying game counting rules |
-| `is_eligible` | `True` if `word_count` ≤ threshold — eligibility flag |
+| `is_eligible` | `true` if `word_count` ≤ threshold |
 | `set_name`, `set_code`, `set_rarity` | First card set from YGOProDeck |
 | `ban_tcg`, `ban_ocg` | Current banlist status |
 | `image_url` | Card artwork URL |
@@ -70,8 +98,6 @@ The Excel workbook has two sheets: `<=N Words` and `>N Words` (where N is the th
 
 ## Word Counting Rules
 
-Word count uses `len(text.split())` — whitespace-separated tokens.
-
 | Card Type | What's Counted |
 |-----------|----------------|
 | Normal Monster (no Pendulum) | 0 — all text is flavour |
@@ -79,7 +105,7 @@ Word count uses `len(text.split())` — whitespace-separated tokens.
 | Pendulum Effect Monster | Pendulum Effect box + Monster Effect box |
 | All others (Effect Monsters, Spells, Traps) | Full description text |
 
-The **shortest errata** is selected by fewest raw words across all errata versions; ties go to the latest version. `word_count` is then the card-type-adjusted count of that text.
+The shortest errata is selected by fewest raw words across all errata versions; ties go to the latest version. The word count is then the card-type-adjusted count of that text.
 
 ---
 
@@ -95,8 +121,14 @@ The **shortest errata** is selected by fewest raw words across all errata versio
 
 ---
 
-## Dependencies
+## Tech Stack
 
-```
-pip install requests pandas openpyxl beautifulsoup4
-```
+| Component | Technology |
+|-----------|------------|
+| Runtime | .NET 10 |
+| CLI parsing | System.CommandLine |
+| HTML parsing | AngleSharp |
+| Excel output | ClosedXML |
+| CSV output | CsvHelper |
+| HTTP | HttpClient + System.Text.Json |
+| Tests | xUnit + Shouldly + NSubstitute |

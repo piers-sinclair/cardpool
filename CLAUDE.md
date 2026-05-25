@@ -138,10 +138,20 @@ See the Python ygodb `CLAUDE.md` for the full word-counting specification.
 
 ## Testing strategy
 
-- **Unit tests** (`WordCounterTests`, `MaterialStripperTests`) — pure logic, no network, always run in CI.
+- **Unit tests** (`WordCounterTests`, `MaterialStripperTests`, `CardNormalizerTests`) — pure logic, no network, always run in CI.
 - **Integration tests** (`ErrataIntegrationTests`, `[Trait("Category","Integration")]`) — hit live APIs;
   assert exact word counts for 11 known-tricky cards (same card list as Python `tests.py`).
-- Run unit tests in CI; run integration tests manually or in a scheduled job.
+- Both suites run in CI (`.github/workflows/ci.yml`).
+
+### Test naming convention
+
+All test methods follow `Method_Scenario_ExpectedBehaviour`:
+
+- **Method** — the public method or feature under test (e.g. `CountEffectiveWords`, `Normalize`, `PostprocessRow`)
+- **Scenario** — the input or setup condition (e.g. `PendulumNormal_SpaceInBracketFormat`, `NoErrataPage`)
+- **ExpectedBehaviour** — the observable assertion result, not an implementation detail (e.g. `Returns0Words`, `ErrataEqualsDesc`, not `UsesFallback`)
+
+Examples: `CountEffectiveWords_NormalMonster_ReturnsZero`, `Normalize_BlueEyesWhiteDragonNoErrataPage_ErrataEqualsDesc`
 
 ---
 

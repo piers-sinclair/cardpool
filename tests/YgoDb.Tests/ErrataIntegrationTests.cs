@@ -159,7 +159,7 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     [InlineData("Stardust Dragon")]
     [InlineData("Number 39: Utopia")]
     [InlineData("Elemental HERO Flame Wingman")]
-    public void PostprocessRow_ExtraDeckCardNoMaterials_WordCountLessOrEqualToUnstripped(string cardName)
+    public void PostprocessRow_ExtraDeckCardNoMaterials_ReducesOrPreservesWordCount(string cardName)
     {
         NmRow(cardName).WordCount.ShouldBeLessThanOrEqualTo(Row(cardName).WordCount);
     }

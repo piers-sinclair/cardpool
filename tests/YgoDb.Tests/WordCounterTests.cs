@@ -14,7 +14,7 @@ public class WordCounterTests
         WordCounter.CountWords(text).ShouldBe(expected);
 
     [Fact]
-    public void CountWords_CollapseMultipleSpaces_CountsCorrectly() =>
+    public void CountWords_ConsecutiveSpaces_TreatedAsSingleSeparator() =>
         WordCounter.CountWords("a  b   c").ShouldBe(3);
 
     [Fact]
@@ -45,14 +45,14 @@ public class WordCounterTests
     }
 
     [Fact]
-    public void CountEffectiveWords_PendulumNormalSpaceInBracketFormat_CountsPendulumOnly()
+    public void CountEffectiveWords_PendulumNormalSpacedBracketHeaders_CountsPendulumOnly()
     {
         var text = "[ Pendulum Effect ] \nscale a b c d\n\n[ Monster Effect ] \nFlavour text only.";
         WordCounter.CountEffectiveWords(text, "Pendulum Normal Monster").ShouldBe(5);
     }
 
     [Fact]
-    public void CountEffectiveWords_PendulumEffectSpaceInBracketFormat_SumsBothSections()
+    public void CountEffectiveWords_PendulumEffectSpacedBracketHeaders_SumsBothSections()
     {
         var text = "[ Pendulum Effect ] \npend a b\n\n[ Monster Effect ] \nmon d e f";
         WordCounter.CountEffectiveWords(text, "Pendulum Effect Monster").ShouldBe(7);

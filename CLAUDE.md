@@ -95,9 +95,9 @@ Python's BeautifulSoup `get_text("")` (empty separator) is critical: punctuation
 
 Yugipedia stores `<del>removed</del>` and `<ins>added</ins>` diff markup. **Both tags must be unwrapped** (call `ReplaceWith(ChildNodes)` on each), not stripped. Stripping either tag gives garbled or incomplete text.
 
-### CJK lore filtering
+### Japanese lore filtering
 
-Some Yugipedia errata pages (e.g. OCG-only cards like Treasure Map) have an `== English ==` section that contains only Japanese/CJK lore text. Both `WikitextParser.ExtractEnglishLoresAsync` and `HtmlErrataScraper.ParseErrataTableAsync` discard any lore string containing Hiragana, Katakana, or CJK Unified Ideographs. When all lore versions are filtered the caller receives an empty list and falls back to the YGOProDeck `desc`.
+Some Yugipedia errata pages (e.g. OCG-only cards like Treasure Map) have an `== English ==` section that contains only Japanese lore text. Both `WikitextParser.ExtractEnglishLoresAsync` and `HtmlErrataScraper.ParseErrataTableAsync` discard any lore string containing Hiragana, Katakana, or Kanji. When all lore versions are filtered the caller receives an empty list and falls back to the YGOProDeck `desc`.
 
 ### Card type filtering — Tokens and Skill Cards
 

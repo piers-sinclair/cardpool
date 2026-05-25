@@ -160,8 +160,6 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     [Fact]
     public void Normalize_TreasureMapJapaneseLoreOnlyCard_FallsBackToDescWith38Words()
     {
-        // Yugipedia's "English" errata section contains only Japanese text for this OCG-only card.
-        // CJK filter discards it → falls back to YGOProDeck desc, which is 38 words (ineligible).
         var row = Row("Treasure Map");
         row.WordCount.ShouldBe(38);
         row.IsEligible.ShouldBeFalse();

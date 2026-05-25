@@ -15,6 +15,7 @@ public class NormalizedRow
     public string? LinkMarkers { get; set; }
     public string? Archetype { get; set; }
     public string Desc { get; set; } = "";
+    public string? Materials { get; set; }
     public string ShortestErrata { get; set; } = "";
     public string LatestErrata { get; set; } = "";
     public int WordCount { get; set; }
@@ -31,7 +32,7 @@ public class NormalizedRow
     public static readonly string[] OutputColumns =
     [
         "id", "name", "type", "race", "attribute", "level", "atk", "def",
-        "scale", "linkval", "linkmarkers", "archetype", "desc",
+        "scale", "linkval", "linkmarkers", "archetype", "desc", "materials",
         "shortest_errata", "latest_errata", "word_count", "is_eligible",
         "set_name", "set_code", "set_rarity", "ban_tcg", "ban_ocg", "image_url"
     ];

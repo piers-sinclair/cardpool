@@ -73,7 +73,25 @@ public class MaterialStripperTests
 
         result.Desc.ShouldBe("Once per turn, you can draw 1 card.");
         result.ShortestErrata.ShouldBe("Once per turn, you can draw 1 card.");
+        result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
         result.WordCount.ShouldBe(WordCounter.CountEffectiveWords("Once per turn, you can draw 1 card.", "Synchro Monster"));
+    }
+
+    [Fact]
+    public void Postprocess_SingleLineSynchroCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "Synchro Monster",
+            Desc = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            ShortestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            LatestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
     }
 
     [Fact]
@@ -91,6 +109,7 @@ public class MaterialStripperTests
 
         var result = MaterialStripper.PostprocessRow(row, 20);
         result.Desc.ShouldBe(original);
+        result.Materials.ShouldBeNull();
         result.WordCount.ShouldBe(5);
     }
 

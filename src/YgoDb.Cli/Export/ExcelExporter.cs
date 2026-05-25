@@ -6,7 +6,7 @@ namespace YgoDb.Cli.Export;
 public static class ExcelExporter
 {
     private static readonly HashSet<string> WideColumns =
-        new(["name", "shortest_errata", "latest_errata"], StringComparer.OrdinalIgnoreCase);
+        new(["name", "materials", "shortest_errata", "latest_errata"], StringComparer.OrdinalIgnoreCase);
 
     public static void Export(List<NormalizedRow> rows, string path, int wordLimit)
     {
@@ -26,11 +26,9 @@ public static class ExcelExporter
         var ws = wb.Worksheets.Add(sheetName);
         var cols = NormalizedRow.OutputColumns;
 
-        // Header row
         for (var i = 0; i < cols.Length; i++)
             ws.Cell(1, i + 1).Value = cols[i];
 
-        // Data rows
         for (var rowIdx = 0; rowIdx < rows.Count; rowIdx++)
         {
             var r = rows[rowIdx];
@@ -39,17 +37,14 @@ public static class ExcelExporter
                 SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
         }
 
-        // AutoFilter on all data
         ws.RangeUsed()?.SetAutoFilter();
 
-        // Column widths
         for (var i = 0; i < cols.Length; i++)
         {
             var col = ws.Column(i + 1);
             col.Width = WideColumns.Contains(cols[i]) ? 45 : 15;
         }
 
-        // Wrap text + top alignment for all cells
         ws.RangeUsed()?.Style
             .Alignment.SetWrapText(true)
             .Alignment.SetVertical(XLAlignmentVerticalValues.Top);
@@ -70,7 +65,7 @@ public static class ExcelExporter
     private static object?[] GetRowValues(NormalizedRow r) =>
     [
         r.Id, r.Name, r.Type, r.Race, r.Attribute, r.Level, r.Atk, r.Def,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Desc,
+        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Desc, r.Materials,
         r.ShortestErrata, r.LatestErrata, r.WordCount, r.IsEligible,
         r.SetName, r.SetCode, r.SetRarity, r.BanTcg, r.BanOcg, r.ImageUrl
     ];

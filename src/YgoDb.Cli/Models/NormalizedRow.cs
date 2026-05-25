@@ -31,9 +31,21 @@ public class NormalizedRow
 
     public static readonly string[] OutputColumns =
     [
-        "id", "name", "type", "race", "attribute", "level", "atk", "def",
-        "scale", "linkval", "linkmarkers", "archetype", "desc", "materials",
-        "shortest_errata", "latest_errata", "word_count", "is_eligible",
-        "set_name", "set_code", "set_rarity", "ban_tcg", "ban_ocg", "image_url"
+        "name", "type", "attribute", "race", "level", "atk", "def",
+        "word_count", "shortest_errata",
+        "scale", "linkval", "linkmarkers", "archetype",
+        "set_name", "set_code", "set_rarity",
+        "ban_tcg", "ban_ocg",
+        "latest_errata", "desc", "id", "image_url", "is_eligible"
+    ];
+
+    public static readonly string[] OutputColumnsWithMaterials =
+    [
+        "name", "type", "attribute", "race", "level", "atk", "def",
+        "word_count", "shortest_errata", "materials",
+        "scale", "linkval", "linkmarkers", "archetype",
+        "set_name", "set_code", "set_rarity",
+        "ban_tcg", "ban_ocg",
+        "latest_errata", "desc", "id", "image_url", "is_eligible"
     ];
 }

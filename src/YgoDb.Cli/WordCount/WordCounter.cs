@@ -4,7 +4,6 @@ namespace YgoDb.Cli.WordCount;
 
 public static partial class WordCounter
 {
-    // Match section headers like "[ Pendulum Effect ]" or "[Pendulum Effect]" and capture until the next "[" or end of string
     [GeneratedRegex(@"\[\s*Pendulum Effect\s*\](.*?)(?=\[|$)", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
     private static partial Regex PendulumEffectRegex();
 
@@ -31,19 +30,14 @@ public static partial class WordCounter
 
     public static int CountEffectiveWords(string? text, string cardType)
     {
-        // Mirrors Python: is_normal = "Normal" in type and "Monster" in type
-        bool isNormal = cardType.Contains("Normal", StringComparison.OrdinalIgnoreCase)
-                        && cardType.Contains("Monster", StringComparison.OrdinalIgnoreCase);
-        bool isPendulum = cardType.Contains("Pendulum", StringComparison.OrdinalIgnoreCase);
+        if (cardType.IsPureNormalMonster()) return 0;
 
-        if (isNormal && !isPendulum) return 0;
-
-        if (isPendulum)
+        if (cardType.IsPendulumType())
         {
             var pend = CountWords(PendulumEffectText(text ?? ""));
-            return isNormal
-                ? pend  // Pendulum Normal: flavour excluded
-                : pend + CountWords(PendulumMonsterText(text ?? ""));
+            return cardType.IsPendulumEffectType()
+                ? pend + CountWords(PendulumMonsterText(text ?? ""))
+                : pend;
         }
 
         return CountWords(text);

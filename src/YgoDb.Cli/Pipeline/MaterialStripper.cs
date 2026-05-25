@@ -6,8 +6,6 @@ namespace YgoDb.Cli.Pipeline;
 
 public static partial class MaterialStripper
 {
-    private static readonly string[] ExtraDeckTypes = ["Fusion", "Synchro", "XYZ", "Link"];
-
     [GeneratedRegex(@"^(?:\d|""[A-Z]|Any )", RegexOptions.Compiled)]
     private static partial Regex MaterialStartRegex();
 
@@ -59,7 +57,7 @@ public static partial class MaterialStripper
 
     public static NormalizedRow PostprocessRow(NormalizedRow row, int wordLimit)
     {
-        if (!ExtraDeckTypes.Any(t => row.Type.Contains(t, StringComparison.OrdinalIgnoreCase)))
+        if (!row.Type.IsExtraDeckType())
             return row;
 
         row.Materials = ExtractMaterialLine(row.Desc);

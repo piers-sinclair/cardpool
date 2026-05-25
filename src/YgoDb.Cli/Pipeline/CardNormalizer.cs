@@ -14,7 +14,7 @@ public static partial class CardNormalizer
 
     public static bool NeedsErrataLookup(YgoCard card, int wordLimit)
     {
-        if (card.Type.Equals("Normal Monster", StringComparison.OrdinalIgnoreCase))
+        if (card.Type.IsPureNormalMonster())
             return false;
 
         return WordCounter.CountEffectiveWords(card.Desc, card.Type) > wordLimit;
@@ -26,23 +26,10 @@ public static partial class CardNormalizer
         string? latestErrata,
         int wordLimit)
     {
-        // Resolve errata — use API desc as fallback when no Yugipedia page
         var resolvedShortest = ResolveErrata(card, shortestErrata);
         var resolvedLatest = ResolveErrata(card, latestErrata);
 
-        // Incomplete Pendulum errata detection: if only one section marker present, fall back to desc
-        var wordSource = resolvedShortest;
-        // Match Python: "Pendulum" in type and "Normal" not in type — catches Pendulum Tuner Effect Monster etc.
-        if (card.Type.Contains("Pendulum", StringComparison.OrdinalIgnoreCase)
-            && !card.Type.Contains("Normal", StringComparison.OrdinalIgnoreCase)
-            && shortestErrata is not null)
-        {
-            bool hasPend = HasPendulumMarkerRegex().IsMatch(resolvedShortest);
-            bool hasMons = HasMonsterMarkerRegex().IsMatch(resolvedShortest);
-            if (hasPend != hasMons)
-                wordSource = card.Desc;
-        }
-
+        var wordSource = ResolveWordSource(card, shortestErrata, resolvedShortest);
         var wordCount = WordCounter.CountEffectiveWords(wordSource, card.Type);
 
         return new NormalizedRow
@@ -73,6 +60,16 @@ public static partial class CardNormalizer
             BanOcg = card.BanlistInfo?.BanOcg,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
+    }
+
+    private static string ResolveWordSource(YgoCard card, string? shortestErrata, string resolvedShortest)
+    {
+        if (!card.Type.IsPendulumEffectType() || shortestErrata is null)
+            return resolvedShortest;
+
+        var hasPend = HasPendulumMarkerRegex().IsMatch(resolvedShortest);
+        var hasMons = HasMonsterMarkerRegex().IsMatch(resolvedShortest);
+        return hasPend != hasMons ? card.Desc : resolvedShortest;
     }
 
     private static string ResolveErrata(YgoCard card, string? errata) =>

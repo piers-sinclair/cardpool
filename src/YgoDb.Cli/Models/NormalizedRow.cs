@@ -42,7 +42,7 @@ public class NormalizedRow
     public static readonly string[] OutputColumnsWithMaterials =
     [
         "name", "type", "attribute", "race", "level", "atk", "def",
-        "word_count", "shortest_errata", "materials",
+        "word_count", "materials", "shortest_errata",
         "scale", "linkval", "linkmarkers", "archetype",
         "set_name", "set_code", "set_rarity",
         "ban_tcg", "ban_ocg",

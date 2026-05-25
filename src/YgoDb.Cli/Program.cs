@@ -26,28 +26,44 @@ var extraDeckOption = new Option<string[]>("--extra-deck")
     DefaultValueFactory = _ => ["all"]
 };
 
+var noPendulumOption = new Option<bool>("--no-pendulum")
+{
+    Description = "Exclude Pendulum cards"
+};
+
 exportCommand.Add(wordsOption);
 exportCommand.Add(noMaterialsOption);
 exportCommand.Add(extraDeckOption);
+exportCommand.Add(noPendulumOption);
 
 const string OutputDirectory = "output";
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
     var noMaterials = parseResult.GetValue(noMaterialsOption);
+    var noPendulum = parseResult.GetValue(noPendulumOption);
     var extraDeckTypes = new HashSet<string>(
         parseResult.GetValue(extraDeckOption) ?? ["all"],
         StringComparer.OrdinalIgnoreCase);
 
     Func<NormalizedRow, bool>? rowFilter = BuildExtraDeckFilter(extraDeckTypes);
+    if (noPendulum)
+    {
+        var baseFilter = rowFilter;
+        rowFilter = baseFilter is null
+            ? row => !row.Type.IsPendulumType()
+            : row => !row.Type.IsPendulumType() && baseFilter(row);
+    }
 
     var extraDeckSuffix = extraDeckTypes.Contains("all") ? ""
         : extraDeckTypes.Contains("none") ? "_no_extra"
         : "_" + string.Join("_", extraDeckTypes.Order());
 
+    var pendulumSuffix = noPendulum ? "_no_pendulum" : "";
+
     var suffix = noMaterials
-        ? words == 20 ? $"no_materials{extraDeckSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}_export"
-        : words == 20 ? $"full{extraDeckSuffix}_export" : $"full_{words}words{extraDeckSuffix}_export";
+        ? words == 20 ? $"no_materials{extraDeckSuffix}{pendulumSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}{pendulumSuffix}_export"
+        : words == 20 ? $"full{extraDeckSuffix}{pendulumSuffix}_export" : $"full_{words}words{extraDeckSuffix}{pendulumSuffix}_export";
 
     Directory.CreateDirectory(OutputDirectory);
     await ExportPipeline.RunAsync(

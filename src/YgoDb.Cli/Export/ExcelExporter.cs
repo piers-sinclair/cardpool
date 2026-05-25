@@ -156,7 +156,7 @@ public static class ExcelExporter
         includeMaterials
         ? [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.WordCount, r.ShortestErrata, r.Materials,
+            r.WordCount, r.Materials, r.ShortestErrata,
             r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
             r.SetName, r.SetCode, r.SetRarity,
             r.BanTcg, r.BanOcg,

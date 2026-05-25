@@ -140,7 +140,7 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     }
 
     [Fact]
-    public void Normalize_BlueEyesWhiteDragon_NoErrataPage_UsesFallbackDesc()
+    public void Normalize_BlueEyesWhiteDragon_NoErrataPage_ErrataEqualsDesc()
     {
         var row = Row("Blue-Eyes White Dragon");
         row.ShortestErrata.ShouldBe(row.Desc);
@@ -148,7 +148,7 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     }
 
     [Fact]
-    public void Normalize_BujinHiruko_NoErrataPage_UsesFallbackDesc()
+    public void Normalize_BujinHiruko_NoErrataPage_ErrataEqualsDesc()
     {
         var row = Row("Bujin Hiruko");
         row.ShortestErrata.ShouldBe(row.Desc);
@@ -159,7 +159,7 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     [InlineData("Stardust Dragon")]
     [InlineData("Number 39: Utopia")]
     [InlineData("Elemental HERO Flame Wingman")]
-    public void PostprocessRow_ExtraDeckCard_NoMaterials_WordCountLessOrEqualToFull(string cardName)
+    public void PostprocessRow_ExtraDeckCard_NoMaterials_WordCountLessOrEqualToUnstripped(string cardName)
     {
         NmRow(cardName).WordCount.ShouldBeLessThanOrEqualTo(Row(cardName).WordCount);
     }

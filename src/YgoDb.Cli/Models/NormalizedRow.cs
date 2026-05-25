@@ -31,11 +31,11 @@ public class NormalizedRow
 
     public static readonly string[] OutputColumns =
     [
-        "name", "is_eligible", "word_count",
-        "shortest_errata", "latest_errata", "desc", "materials",
+        "name", "word_count", "shortest_errata",
         "type", "attribute", "race", "level", "atk", "def",
-        "scale", "linkval", "linkmarkers", "archetype",
+        "scale", "linkval", "linkmarkers", "archetype", "materials",
         "set_name", "set_code", "set_rarity",
-        "ban_tcg", "ban_ocg", "id", "image_url"
+        "ban_tcg", "ban_ocg",
+        "latest_errata", "desc", "id", "image_url", "is_eligible"
     ];
 }

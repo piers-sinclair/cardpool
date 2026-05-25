@@ -9,12 +9,8 @@ public static class ExcelExporter
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["name"]            = 35,
-            ["is_eligible"]     = 13,
             ["word_count"]      = 12,
-            ["shortest_errata"] = 50,
-            ["latest_errata"]   = 50,
-            ["desc"]            = 50,
-            ["materials"]       = 35,
+            ["shortest_errata"] = 65,
             ["type"]            = 28,
             ["attribute"]       = 12,
             ["race"]            = 15,
@@ -25,16 +21,20 @@ public static class ExcelExporter
             ["linkval"]         = 10,
             ["linkmarkers"]     = 15,
             ["archetype"]       = 22,
+            ["materials"]       = 35,
             ["set_name"]        = 30,
             ["set_code"]        = 12,
             ["set_rarity"]      = 15,
             ["ban_tcg"]         = 12,
             ["ban_ocg"]         = 12,
+            ["latest_errata"]   = 50,
+            ["desc"]            = 50,
             ["id"]              = 10,
             ["image_url"]       = 12,
+            ["is_eligible"]     = 13,
         };
 
-    private const double DataRowHeight = 80;
+    private const double DataRowHeight = 35;
 
     public static void Export(List<NormalizedRow> rows, string path, int wordLimit)
     {
@@ -150,11 +150,11 @@ public static class ExcelExporter
 
     private static object?[] GetRowValues(NormalizedRow r) =>
     [
-        r.Name, r.IsEligible, r.WordCount,
-        r.ShortestErrata, r.LatestErrata, r.Desc, r.Materials,
+        r.Name, r.WordCount, r.ShortestErrata,
         r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Materials,
         r.SetName, r.SetCode, r.SetRarity,
-        r.BanTcg, r.BanOcg, r.Id, r.ImageUrl
+        r.BanTcg, r.BanOcg,
+        r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
     ];
 }

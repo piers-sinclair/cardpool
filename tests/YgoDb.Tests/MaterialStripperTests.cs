@@ -91,6 +91,40 @@ public class MaterialStripperTests
     }
 
     [Fact]
+    public void PostprocessRow_SingleLineFusionCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "Fusion Monster",
+            Desc = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            ShortestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            LatestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("\"Elemental HERO\" monster + 1 FIRE monster");
+    }
+
+    [Fact]
+    public void PostprocessRow_SingleLineXyzCard_SetsMaterials()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "XYZ Monster",
+            Desc = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            ShortestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            LatestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
+            WordCount = 99
+        };
+
+        var result = MaterialStripper.PostprocessRow(row, 20);
+
+        result.Materials.ShouldBe("2 Level 4 monsters");
+    }
+
+    [Fact]
     public void PostprocessRow_SpellCard_Unchanged()
     {
         var original = "Discard 1 card; draw 2 cards.";

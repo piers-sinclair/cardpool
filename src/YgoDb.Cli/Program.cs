@@ -16,7 +16,8 @@ var wordsOption = new Option<int>("--words")
 
 var noMaterialsOption = new Option<bool>("--no-materials")
 {
-    Description = "Strip material requirements from Extra Deck monsters"
+    Description = "Strip material requirements from Extra Deck monsters",
+    DefaultValueFactory = _ => true
 };
 
 var extraDeckOption = new Option<string[]>("--extra-deck")

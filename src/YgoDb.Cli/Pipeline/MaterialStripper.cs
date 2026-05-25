@@ -6,6 +6,8 @@ namespace YgoDb.Cli.Pipeline;
 
 public static partial class MaterialStripper
 {
+    private sealed record MaterialSplit(string? Material, string Effect);
+
     [GeneratedRegex(@"^(?:\d|""[A-Z]|Any )", RegexOptions.Compiled)]
     private static partial Regex MaterialStartRegex();
 
@@ -17,25 +19,25 @@ public static partial class MaterialStripper
     [GeneratedRegex(EffectStartersPattern, RegexOptions.Compiled)]
     private static partial Regex EffectStarterRegex();
 
-    private static (string? Material, string Effect) SplitMaterialLine(string text)
+    private static MaterialSplit SplitMaterialLine(string text)
     {
-        if (string.IsNullOrEmpty(text)) return (null, text);
+        if (string.IsNullOrEmpty(text)) return new(null, text);
 
         var newlineIdx = text.IndexOf('\n');
         if (newlineIdx >= 0)
         {
             var remainder = text[(newlineIdx + 1)..].Trim();
             return string.IsNullOrEmpty(remainder)
-                ? (null, text)
-                : (text[..newlineIdx].Trim(), remainder);
+                ? new(null, text)
+                : new(text[..newlineIdx].Trim(), remainder);
         }
 
-        if (!MaterialStartRegex().IsMatch(text)) return (null, text);
+        if (!MaterialStartRegex().IsMatch(text)) return new(null, text);
 
         var match = EffectStarterRegex().Match(text);
-        if (!match.Success || match.Index == 0) return (null, text);
+        if (!match.Success || match.Index == 0) return new(null, text);
 
-        return (text[..match.Index].Trim(), text[match.Index..]);
+        return new(text[..match.Index].Trim(), text[match.Index..]);
     }
 
     public static string StripMaterialLine(string text) => SplitMaterialLine(text).Effect;
@@ -45,7 +47,9 @@ public static partial class MaterialStripper
         if (!row.Type.IsExtraDeckType())
             return row;
 
-        (row.Materials, row.Desc) = SplitMaterialLine(row.Desc);
+        var split = SplitMaterialLine(row.Desc);
+        row.Materials = split.Material;
+        row.Desc = split.Effect;
         row.ShortestErrata = StripMaterialLine(row.ShortestErrata);
         row.LatestErrata = StripMaterialLine(row.LatestErrata);
 

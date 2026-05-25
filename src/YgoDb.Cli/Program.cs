@@ -19,18 +19,35 @@ var noMaterialsOption = new Option<bool>("--no-materials")
     Description = "Strip material requirements from Extra Deck monsters"
 };
 
+var extraDeckOption = new Option<string[]>("--extra-deck")
+{
+    Description = "Extra Deck types to include: all, none, fusion, synchro, xyz, link (repeatable). Default: all.",
+    AllowMultipleArgumentsPerToken = true,
+    DefaultValueFactory = _ => ["all"]
+};
+
 exportCommand.Add(wordsOption);
 exportCommand.Add(noMaterialsOption);
+exportCommand.Add(extraDeckOption);
 
 const string OutputDirectory = "output";
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
     var noMaterials = parseResult.GetValue(noMaterialsOption);
+    var extraDeckTypes = new HashSet<string>(
+        parseResult.GetValue(extraDeckOption) ?? ["all"],
+        StringComparer.OrdinalIgnoreCase);
+
+    Func<NormalizedRow, bool>? rowFilter = BuildExtraDeckFilter(extraDeckTypes);
+
+    var extraDeckSuffix = extraDeckTypes.Contains("all") ? ""
+        : extraDeckTypes.Contains("none") ? "_no_extra"
+        : "_" + string.Join("_", extraDeckTypes.Order());
 
     var suffix = noMaterials
-        ? words == 20 ? "no_materials_export" : $"no_materials_{words}words_export"
-        : words == 20 ? "full_export" : $"full_{words}words_export";
+        ? words == 20 ? $"no_materials{extraDeckSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}_export"
+        : words == 20 ? $"full{extraDeckSuffix}_export" : $"full_{words}words{extraDeckSuffix}_export";
 
     Directory.CreateDirectory(OutputDirectory);
     await ExportPipeline.RunAsync(
@@ -39,8 +56,24 @@ exportCommand.SetAction(async parseResult =>
         wordLimit: words,
         rowPostprocess: noMaterials
             ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
-            : null);
+            : null,
+        rowFilter: rowFilter);
 });
+
+static Func<NormalizedRow, bool>? BuildExtraDeckFilter(HashSet<string> types)
+{
+    if (types.Contains("all")) return null;
+    return row =>
+    {
+        if (!row.Type.IsExtraDeckType()) return true;
+        if (types.Contains("none")) return false;
+        if (types.Contains("fusion") && row.Type.Contains("Fusion", StringComparison.OrdinalIgnoreCase)) return true;
+        if (types.Contains("synchro") && row.Type.Contains("Synchro", StringComparison.OrdinalIgnoreCase)) return true;
+        if (types.Contains("xyz") && row.Type.Contains("XYZ", StringComparison.OrdinalIgnoreCase)) return true;
+        if (types.Contains("link") && row.Type.Contains("Link", StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    };
+}
 
 rootCommand.Add(exportCommand);
 

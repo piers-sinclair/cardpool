@@ -11,6 +11,7 @@ public sealed class IntegrationData : IAsyncLifetime
         "Catapult Turtle", "Magical Android", "Bujin Hiruko", "Timegazer Magician",
         "Luster Pendulum, the Dracoslayer",
         "Stardust Dragon", "Number 39: Utopia", "Elemental HERO Flame Wingman",
+        "Aqua Dragon", "Berserker of the Tenyi",
     ];
 
     public IReadOnlyDictionary<string, NormalizedRow> Rows => _rows;
@@ -162,5 +163,19 @@ public class ErrataIntegrationTests(IntegrationData data) : IClassFixture<Integr
     public void PostprocessRow_ExtraDeckCardNoMaterials_ReducesOrPreservesWordCount(string cardName)
     {
         NmRow(cardName).WordCount.ShouldBeLessThanOrEqualTo(Row(cardName).WordCount);
+    }
+
+    [Fact]
+    public void PostprocessRow_AquaDragonNormalFusion_ZeroWordsEligible()
+    {
+        NmRow("Aqua Dragon").WordCount.ShouldBe(0);
+        NmRow("Aqua Dragon").IsEligible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PostprocessRow_BerserkerOfTenyiLinkMaterialOnly_ZeroWordsEligible()
+    {
+        NmRow("Berserker of the Tenyi").WordCount.ShouldBe(0);
+        NmRow("Berserker of the Tenyi").IsEligible.ShouldBeTrue();
     }
 }

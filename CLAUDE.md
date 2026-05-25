@@ -58,6 +58,11 @@ dotnet run --project src/YgoDb.Cli -- export --words 30              # full, ≤
 dotnet run --project src/YgoDb.Cli -- export --no-materials          # strip Extra Deck, ≤20w; keeps stripped materials in a separate column
 dotnet run --project src/YgoDb.Cli -- export --no-materials --words 25
 
+# --extra-deck: which Extra Deck types to include (all|none|fusion|synchro|xyz|link, repeatable)
+dotnet run --project src/YgoDb.Cli -- export --extra-deck none        # main deck cards only
+dotnet run --project src/YgoDb.Cli -- export --extra-deck fusion synchro   # fusion + synchro only
+dotnet run --project src/YgoDb.Cli -- export --no-materials --extra-deck synchro xyz
+
 # Inspect a single card (replaces inspect_card.py)
 dotnet run --project src/YgoDb.Cli -- inspect "Raiza the Storm Monarch"
 

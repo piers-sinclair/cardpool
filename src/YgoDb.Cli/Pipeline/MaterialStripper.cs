@@ -35,7 +35,8 @@ public static partial class MaterialStripper
         if (!MaterialStartRegex().IsMatch(text)) return new(null, text);
 
         var match = EffectStarterRegex().Match(text);
-        if (!match.Success || match.Index == 0) return new(null, text);
+        if (!match.Success) return new(text, string.Empty);
+        if (match.Index == 0) return new(null, text);
 
         return new(text[..match.Index].Trim(), text[match.Index..]);
     }

@@ -13,7 +13,8 @@ public static class ExportPipeline
         string outputXlsx,
         string outputCsv,
         int wordLimit = 20,
-        Func<NormalizedRow, int, NormalizedRow>? rowPostprocess = null)
+        Func<NormalizedRow, int, NormalizedRow>? rowPostprocess = null,
+        Func<NormalizedRow, bool>? rowFilter = null)
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         using var ygoDeck = new YgoProDeckClient(http);
@@ -69,7 +70,8 @@ public static class ExportPipeline
             if (rowPostprocess is not null)
                 row = rowPostprocess(row, wordLimit);
 
-            rows.Add(row);
+            if (rowFilter is null || rowFilter(row))
+                rows.Add(row);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");

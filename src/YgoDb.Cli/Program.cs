@@ -11,7 +11,7 @@ var exportCommand = new Command("export", "Export card data to Excel/CSV");
 var wordsOption = new Option<int>("--words")
 {
     Description = "Word-count threshold for eligibility",
-    DefaultValueFactory = _ => 20
+    DefaultValueFactory = _ => 25
 };
 
 var noMaterialsOption = new Option<bool>("--no-materials")
@@ -21,14 +21,15 @@ var noMaterialsOption = new Option<bool>("--no-materials")
 
 var extraDeckOption = new Option<string[]>("--extra-deck")
 {
-    Description = "Extra Deck types to include: all, none, fusion, synchro, xyz, link (repeatable). Default: all.",
+    Description = "Extra Deck types to include: all, none, fusion, synchro, xyz, link (repeatable). Default: fusion synchro xyz.",
     AllowMultipleArgumentsPerToken = true,
-    DefaultValueFactory = _ => ["all"]
+    DefaultValueFactory = _ => ["fusion", "synchro", "xyz"]
 };
 
 var noPendulumOption = new Option<bool>("--no-pendulum")
 {
-    Description = "Exclude Pendulum cards"
+    Description = "Exclude Pendulum cards",
+    DefaultValueFactory = _ => true
 };
 
 exportCommand.Add(wordsOption);
@@ -55,15 +56,17 @@ exportCommand.SetAction(async parseResult =>
             : row => !row.Type.IsPendulumType() && baseFilter(row);
     }
 
+    var defaultExtraDeckTypes = new HashSet<string>(["fusion", "synchro", "xyz"], StringComparer.OrdinalIgnoreCase);
     var extraDeckSuffix = extraDeckTypes.Contains("all") ? ""
+        : extraDeckTypes.SetEquals(defaultExtraDeckTypes) ? "_no_link"
         : extraDeckTypes.Contains("none") ? "_no_extra"
         : "_" + string.Join("_", extraDeckTypes.Order());
 
     var pendulumSuffix = noPendulum ? "_no_pendulum" : "";
 
     var suffix = noMaterials
-        ? words == 20 ? $"no_materials{extraDeckSuffix}{pendulumSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}{pendulumSuffix}_export"
-        : words == 20 ? $"full{extraDeckSuffix}{pendulumSuffix}_export" : $"full_{words}words{extraDeckSuffix}{pendulumSuffix}_export";
+        ? words == 25 ? $"no_materials{extraDeckSuffix}{pendulumSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}{pendulumSuffix}_export"
+        : words == 25 ? $"full{extraDeckSuffix}{pendulumSuffix}_export" : $"full_{words}words{extraDeckSuffix}{pendulumSuffix}_export";
 
     Directory.CreateDirectory(OutputDirectory);
     await ExportPipeline.RunAsync(

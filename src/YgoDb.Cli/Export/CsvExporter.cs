@@ -12,25 +12,37 @@ public static class CsvExporter
         using var writer = new StreamWriter(path, append: false, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         using var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture));
 
-        foreach (var col in NormalizedRow.OutputColumns)
+        var hasMaterials = rows.Any(r => r.Materials != null);
+        var cols = hasMaterials ? NormalizedRow.OutputColumnsWithMaterials : NormalizedRow.OutputColumns;
+
+        foreach (var col in cols)
             csv.WriteField(col);
         csv.NextRecord();
 
         foreach (var r in rows)
         {
-            foreach (var value in GetRowValues(r))
+            foreach (var value in GetRowValues(r, hasMaterials))
                 csv.WriteField(value);
             csv.NextRecord();
         }
     }
 
-    private static object?[] GetRowValues(NormalizedRow r) =>
-    [
-        r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-        r.WordCount, r.ShortestErrata, r.Materials,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-        r.SetName, r.SetCode, r.SetRarity,
-        r.BanTcg, r.BanOcg,
-        r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
-    ];
+    private static object?[] GetRowValues(NormalizedRow r, bool includeMaterials) =>
+        includeMaterials
+        ? [
+            r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+            r.WordCount, r.ShortestErrata, r.Materials,
+            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+            r.SetName, r.SetCode, r.SetRarity,
+            r.BanTcg, r.BanOcg,
+            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+          ]
+        : [
+            r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+            r.WordCount, r.ShortestErrata,
+            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+            r.SetName, r.SetCode, r.SetRarity,
+            r.BanTcg, r.BanOcg,
+            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+          ];
 }

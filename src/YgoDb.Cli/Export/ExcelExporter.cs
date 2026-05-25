@@ -52,10 +52,11 @@ public static class ExcelExporter
     private static void AddSheet(XLWorkbook wb, string sheetName, List<NormalizedRow> rows)
     {
         var ws = wb.Worksheets.Add(sheetName);
-        var cols = NormalizedRow.OutputColumns;
+        var hasMaterials = rows.Any(r => r.Materials != null);
+        var cols = hasMaterials ? NormalizedRow.OutputColumnsWithMaterials : NormalizedRow.OutputColumns;
 
         WriteHeaders(ws, cols);
-        WriteDataRows(ws, rows);
+        WriteDataRows(ws, rows, hasMaterials);
 
         ws.RangeUsed()?.SetAutoFilter();
         ApplyColumnWidths(ws, cols);
@@ -73,11 +74,11 @@ public static class ExcelExporter
             ws.Cell(1, i + 1).Value = cols[i];
     }
 
-    private static void WriteDataRows(IXLWorksheet ws, List<NormalizedRow> rows)
+    private static void WriteDataRows(IXLWorksheet ws, List<NormalizedRow> rows, bool includeMaterials)
     {
         for (var rowIdx = 0; rowIdx < rows.Count; rowIdx++)
         {
-            var values = GetRowValues(rows[rowIdx]);
+            var values = GetRowValues(rows[rowIdx], includeMaterials);
             for (var colIdx = 0; colIdx < values.Length; colIdx++)
                 SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
         }
@@ -151,13 +152,22 @@ public static class ExcelExporter
         }
     }
 
-    private static object?[] GetRowValues(NormalizedRow r) =>
-    [
-        r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-        r.WordCount, r.ShortestErrata, r.Materials,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-        r.SetName, r.SetCode, r.SetRarity,
-        r.BanTcg, r.BanOcg,
-        r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
-    ];
+    private static object?[] GetRowValues(NormalizedRow r, bool includeMaterials) =>
+        includeMaterials
+        ? [
+            r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+            r.WordCount, r.ShortestErrata, r.Materials,
+            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+            r.SetName, r.SetCode, r.SetRarity,
+            r.BanTcg, r.BanOcg,
+            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+          ]
+        : [
+            r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+            r.WordCount, r.ShortestErrata,
+            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+            r.SetName, r.SetCode, r.SetRarity,
+            r.BanTcg, r.BanOcg,
+            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+          ];
 }

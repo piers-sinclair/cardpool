@@ -1,0 +1,60 @@
+## Claude Code local settings
+.claude/
+
+## .NET
+# Build outputs
+bin/
+obj/
+out/
+
+# NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+.packages/
+packages/
+
+# Test results
+TestResults/
+coverage.xml
+*.coverage
+*.coveragexml
+
+# Publish profiles
+**/Properties/PublishProfiles/
+**/publish/
+
+# dotnet user secrets
+secrets.json
+appsettings.*.json
+!appsettings.json
+
+# Rider / ReSharper
+.idea/
+*.sln.iml
+_ReSharper*/
+*.DotSettings.user
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.aps
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+## Project-specific
+# Generated export files (run dotnet run -- export to regenerate)
+output/

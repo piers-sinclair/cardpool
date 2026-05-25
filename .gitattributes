@@ -1,0 +1,11 @@
+# Normalize line endings to LF in the repo; Git handles CRLF conversion on checkout for Windows
+* text=auto eol=lf
+
+# Force binary for compiled/binary assets
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.xlsx binary
+*.pdf binary

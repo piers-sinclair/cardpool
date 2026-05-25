@@ -26,9 +26,11 @@ public static class CsvExporter
 
     private static object?[] GetRowValues(NormalizedRow r) =>
     [
-        r.Id, r.Name, r.Type, r.Race, r.Attribute, r.Level, r.Atk, r.Def,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Desc, r.Materials,
-        r.ShortestErrata, r.LatestErrata, r.WordCount, r.IsEligible,
-        r.SetName, r.SetCode, r.SetRarity, r.BanTcg, r.BanOcg, r.ImageUrl
+        r.Name, r.IsEligible, r.WordCount,
+        r.ShortestErrata, r.LatestErrata, r.Desc, r.Materials,
+        r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
+        r.SetName, r.SetCode, r.SetRarity,
+        r.BanTcg, r.BanOcg, r.Id, r.ImageUrl
     ];
 }

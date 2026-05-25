@@ -151,7 +151,7 @@ All test methods follow `Method_Scenario_ExpectedBehaviour`:
 - **Scenario** — the input or setup condition (e.g. `PendulumNormal_SpaceInBracketFormat`, `NoErrataPage`)
 - **ExpectedBehaviour** — the observable assertion result, not an implementation detail (e.g. `Returns0Words`, `ErrataEqualsDesc`, not `UsesFallback`)
 
-Examples: `CountEffectiveWords_NormalMonster_ReturnsZero`, `Normalize_BlueEyesWhiteDragon_NoErrataPage_ErrataEqualsDesc`
+Examples: `CountEffectiveWords_NormalMonster_ReturnsZero`, `Normalize_BlueEyesWhiteDragonNoErrataPage_ErrataEqualsDesc`
 
 ---
 

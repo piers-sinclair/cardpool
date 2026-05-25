@@ -11,7 +11,7 @@ public class CardNormalizerTests
             CardSets: null, BanlistInfo: null, CardImages: null);
 
     [Fact]
-    public void Normalize_PendulumTunerEffect_IncompleteMonstersOnlyErrata_FallsBackToDesc()
+    public void Normalize_PendulumTunerEffectIncompleteMonstersErrata_FallsBackToDesc()
     {
         var desc = "[ Pendulum Effect ] \npend a b\n\n[ Monster Effect ] \nmon d e f";
         var card = MakeCard("Pendulum Tuner Effect Monster", desc);
@@ -25,7 +25,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_PendulumTunerEffect_IncompletePendulumOnlyErrata_FallsBackToDesc()
+    public void Normalize_PendulumTunerEffectIncompletePendulumErrata_FallsBackToDesc()
     {
         var desc = "[ Pendulum Effect ] \npend a b\n\n[ Monster Effect ] \nmon d e f";
         var card = MakeCard("Pendulum Tuner Effect Monster", desc);
@@ -38,7 +38,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_PendulumEffect_CompleteErrata_UsesErrata()
+    public void Normalize_PendulumEffectCompleteErrata_UsesErrata()
     {
         var desc = "[ Pendulum Effect ] \npend a b c d e f\n\n[ Monster Effect ] \nmon g h i j k l";
         var card = MakeCard("Pendulum Effect Monster", desc);
@@ -51,7 +51,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_PendulumNormal_NoErrataPage_UsesDesc()
+    public void Normalize_PendulumNormalNoErrataPage_UsesDesc()
     {
         var desc = "[ Pendulum Effect ] \npend a b c\n\n[ Monster Effect ] \nFlavour only.";
         var card = MakeCard("Pendulum Normal Monster", desc);

@@ -4,17 +4,15 @@ namespace YgoDb.Tests;
 
 public class MaterialStripperTests
 {
-    // ── StripMaterialLine ─────────────────────────────────────────────────
-
     [Fact]
-    public void Strip_MultiLine_RemovesFirstLine()
+    public void StripMaterialLine_MultiLine_RemovesFirstLine()
     {
         var text = "1 Tuner + 1 non-Tuner\nOnce per turn, you can draw 1 card.";
         MaterialStripper.StripMaterialLine(text).ShouldBe("Once per turn, you can draw 1 card.");
     }
 
     [Fact]
-    public void Strip_SingleLineSynchro_RemovesMaterial()
+    public void StripMaterialLine_SingleLineSynchro_RemovesMaterial()
     {
         var text = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.";
         var result = MaterialStripper.StripMaterialLine(text);
@@ -22,7 +20,7 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void Strip_SingleLineXyz_RemovesMaterial()
+    public void StripMaterialLine_SingleLineXyz_RemovesMaterial()
     {
         var text = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.";
         var result = MaterialStripper.StripMaterialLine(text);
@@ -30,7 +28,7 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void Strip_SingleLineFusion_RemovesMaterial()
+    public void StripMaterialLine_SingleLineFusion_RemovesMaterial()
     {
         var text = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.";
         var result = MaterialStripper.StripMaterialLine(text);
@@ -38,27 +36,25 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void Strip_NoMaterialIndicator_ReturnsOriginal()
+    public void StripMaterialLine_NoMaterialIndicator_ReturnsOriginal()
     {
         var text = "Once per turn: Draw 1 card.";
         MaterialStripper.StripMaterialLine(text).ShouldBe(text);
     }
 
     [Fact]
-    public void Strip_MaterialOnlyText_ReturnsOriginal()
+    public void StripMaterialLine_MaterialOnlyText_ReturnsOriginal()
     {
         var text = "2 Level 4 monsters";
         MaterialStripper.StripMaterialLine(text).ShouldBe(text);
     }
 
     [Fact]
-    public void Strip_EmptyString_ReturnsEmpty() =>
+    public void StripMaterialLine_EmptyString_ReturnsEmpty() =>
         MaterialStripper.StripMaterialLine("").ShouldBe("");
 
-    // ── PostprocessRow ────────────────────────────────────────────────────
-
     [Fact]
-    public void Postprocess_SynchroCard_StripsAndRecalculates()
+    public void PostprocessRow_SynchroCard_StripsAndRecalculates()
     {
         var row = new NormalizedRow
         {
@@ -77,7 +73,7 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void Postprocess_SpellCard_Unchanged()
+    public void PostprocessRow_SpellCard_Unchanged()
     {
         var original = "Discard 1 card; draw 2 cards.";
         var row = new NormalizedRow
@@ -95,7 +91,7 @@ public class MaterialStripperTests
     }
 
     [Fact]
-    public void Postprocess_EffectMonster_Unchanged()
+    public void PostprocessRow_EffectMonster_Unchanged()
     {
         var original = "Once per turn: Draw 1 card.";
         var row = new NormalizedRow

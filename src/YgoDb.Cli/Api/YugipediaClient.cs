@@ -8,6 +8,7 @@ public sealed class YugipediaClient : IDisposable
 {
     private const string ApiUrl = "https://yugipedia.com/api.php";
     private const string UserAgent = "ygodb-errata-fetcher/1.0";
+    private const string ErrataPagePrefix = "Card Errata:";
     private const double MinIntervalMs = 100.0;
 
     private readonly HttpClient _http;
@@ -20,17 +21,13 @@ public sealed class YugipediaClient : IDisposable
         _http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
     }
 
-    /// <summary>
-    /// Fetches errata for up to 50 card names in a single API call.
-    /// Returns a dict of card name → (shortestErrata, latestErrata), or null values if no page exists.
-    /// </summary>
     public async Task<Dictionary<string, (string? Shortest, string? Latest)>> FetchErrataAsync(
         IReadOnlyList<string> cardNames)
     {
-        var titles = string.Join("|", cardNames.Select(n => $"Card Errata:{n}"));
+        var titles = string.Join("|", cardNames.Select(n => $"{ErrataPagePrefix}{n}"));
         var url = $"{ApiUrl}?action=query&prop=revisions&rvprop=content&titles={Uri.EscapeDataString(titles)}&format=json";
 
-        var json = await ThrottledGetAsync(url);
+        var json = await ThrottledGetWithRetryAsync(url);
         var result = new Dictionary<string, (string?, string?)>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
 
         var pages = json?["query"]?["pages"]?.AsObject();
@@ -40,15 +37,14 @@ public sealed class YugipediaClient : IDisposable
             return result;
         }
 
-        // Build lookup from page title → lores
         var pageMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var (_, page) in pages)
         {
             if (page is null || page["missing"] is not null) continue;
 
             var title = page["title"]?.GetValue<string>() ?? "";
-            var cardName = title.StartsWith("Card Errata:", StringComparison.OrdinalIgnoreCase)
-                ? title["Card Errata:".Length..]
+            var cardName = title.StartsWith(ErrataPagePrefix, StringComparison.OrdinalIgnoreCase)
+                ? title[ErrataPagePrefix.Length..]
                 : title;
 
             var wikitext = page["revisions"]?[0]?["*"]?.GetValue<string>();
@@ -76,19 +72,15 @@ public sealed class YugipediaClient : IDisposable
         return result;
     }
 
-    /// <summary>
-    /// Fetches the rendered HTML errata table for a single card (used by inspect command).
-    /// </summary>
     public async Task<string?> FetchErrataHtmlAsync(string cardName)
     {
-        var url = $"{ApiUrl}?action=parse&page={Uri.EscapeDataString($"Card Errata:{cardName}")}&prop=text&format=json";
-        var json = await ThrottledGetAsync(url);
+        var url = $"{ApiUrl}?action=parse&page={Uri.EscapeDataString($"{ErrataPagePrefix}{cardName}")}&prop=text&format=json";
+        var json = await ThrottledGetWithRetryAsync(url);
         return json?["parse"]?["text"]?["*"]?.GetValue<string>();
     }
 
-    private async Task<JsonNode?> ThrottledGetAsync(string url)
+    private async Task<JsonNode?> ThrottledGetWithRetryAsync(string url)
     {
-        // Retry up to 3 times for transient Yugipedia DB errors (returned as HTTP 200 with error JSON)
         for (var attempt = 0; attempt < 3; attempt++)
         {
             await _rateLock.WaitAsync();
@@ -112,7 +104,6 @@ public sealed class YugipediaClient : IDisposable
             if (json?["error"] is null)
                 return json;
 
-            // Transient error — back off before retrying
             if (attempt < 2)
                 await Task.Delay(1000 * (1 << attempt));
         }

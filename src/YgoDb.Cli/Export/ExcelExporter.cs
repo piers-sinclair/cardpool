@@ -26,11 +26,9 @@ public static class ExcelExporter
         var ws = wb.Worksheets.Add(sheetName);
         var cols = NormalizedRow.OutputColumns;
 
-        // Header row
         for (var i = 0; i < cols.Length; i++)
             ws.Cell(1, i + 1).Value = cols[i];
 
-        // Data rows
         for (var rowIdx = 0; rowIdx < rows.Count; rowIdx++)
         {
             var r = rows[rowIdx];
@@ -39,17 +37,14 @@ public static class ExcelExporter
                 SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
         }
 
-        // AutoFilter on all data
         ws.RangeUsed()?.SetAutoFilter();
 
-        // Column widths
         for (var i = 0; i < cols.Length; i++)
         {
             var col = ws.Column(i + 1);
             col.Width = WideColumns.Contains(cols[i]) ? 45 : 15;
         }
 
-        // Wrap text + top alignment for all cells
         ws.RangeUsed()?.Style
             .Alignment.SetWrapText(true)
             .Alignment.SetVertical(XLAlignmentVerticalValues.Top);

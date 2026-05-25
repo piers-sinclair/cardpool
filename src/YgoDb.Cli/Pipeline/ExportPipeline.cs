@@ -28,7 +28,6 @@ public static class ExportPipeline
             .ToList();
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
-        // Batch errata fetches in parallel (capped at MaxWorkers)
         var batches = candidates.Chunk(BatchSize).ToArray();
         var errataMap = new Dictionary<string, (string? Shortest, string? Latest)>(
             candidates.Count, StringComparer.OrdinalIgnoreCase);

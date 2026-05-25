@@ -6,12 +6,9 @@ namespace YgoDb.Cli.Pipeline;
 
 public static partial class MaterialStripper
 {
-    private static readonly string[] ExtraDeckTypes = ["Fusion", "Synchro", "XYZ", "Link"];
-
     [GeneratedRegex(@"^(?:\d|""[A-Z]|Any )", RegexOptions.Compiled)]
     private static partial Regex MaterialStartRegex();
 
-    // Keywords that mark the start of the effect text on single-line material entries
     private const string EffectStartersPattern =
         @"Once|If|When|While|Unless|You|This card|Cannot|Must|During|At the|Each|" +
         @"Neither|Both players|Negate|Target|Gains|Draw|Banish|Send|Add|Return|" +
@@ -24,7 +21,6 @@ public static partial class MaterialStripper
     {
         if (string.IsNullOrEmpty(text)) return text;
 
-        // Multi-line: first line is the material requirement
         var newlineIdx = text.IndexOf('\n');
         if (newlineIdx >= 0)
         {
@@ -32,7 +28,6 @@ public static partial class MaterialStripper
             return string.IsNullOrEmpty(remainder) ? text : remainder;
         }
 
-        // Single-line: only strip if text starts with a material indicator
         if (!MaterialStartRegex().IsMatch(text)) return text;
 
         var match = EffectStarterRegex().Match(text);
@@ -43,7 +38,7 @@ public static partial class MaterialStripper
 
     public static NormalizedRow PostprocessRow(NormalizedRow row, int wordLimit)
     {
-        if (!ExtraDeckTypes.Any(t => row.Type.Contains(t, StringComparison.OrdinalIgnoreCase)))
+        if (!row.Type.IsExtraDeckType())
             return row;
 
         row.Desc = StripMaterialLine(row.Desc);

@@ -60,7 +60,6 @@ public static partial class WikitextParser
         foreach (var tag in doc.QuerySelectorAll("del, ins").ToList())
             tag.ReplaceWith(tag.ChildNodes.ToArray());
 
-        // TextContent is equivalent to BeautifulSoup get_text("") — no separator between nodes
         var text = doc.Body?.TextContent ?? "";
         return NormaliseWhitespace(text);
     }

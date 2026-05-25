@@ -9,19 +9,19 @@ public static class ExcelExporter
         new(StringComparer.OrdinalIgnoreCase)
         {
             ["name"]            = 35,
-            ["word_count"]      = 12,
-            ["shortest_errata"] = 65,
             ["type"]            = 28,
             ["attribute"]       = 12,
             ["race"]            = 15,
             ["level"]           =  8,
             ["atk"]             =  8,
             ["def"]             =  8,
+            ["word_count"]      = 12,
+            ["shortest_errata"] = 65,
+            ["materials"]       = 35,
             ["scale"]           =  8,
             ["linkval"]         = 10,
             ["linkmarkers"]     = 15,
             ["archetype"]       = 22,
-            ["materials"]       = 35,
             ["set_name"]        = 30,
             ["set_code"]        = 12,
             ["set_rarity"]      = 15,
@@ -34,7 +34,7 @@ public static class ExcelExporter
             ["is_eligible"]     = 13,
         };
 
-    private const double DataRowHeight = 35;
+    private const double DataRowHeight = 28;
 
     public static void Export(List<NormalizedRow> rows, string path, int wordLimit)
     {
@@ -59,7 +59,7 @@ public static class ExcelExporter
 
         ws.RangeUsed()?.SetAutoFilter();
         ApplyColumnWidths(ws, cols);
-        ApplyDefaultDataRowHeight(ws);
+        ApplyDataRowHeights(ws, rows.Count);
         StyleHeaderRow(ws, cols);
         FreezeHeaderAndNameColumn(ws);
 
@@ -89,8 +89,11 @@ public static class ExcelExporter
             ws.Column(i + 1).Width = ColumnWidths.TryGetValue(cols[i], out var w) ? w : 15;
     }
 
-    private static void ApplyDefaultDataRowHeight(IXLWorksheet ws) =>
-        ws.RowHeight = DataRowHeight;
+    private static void ApplyDataRowHeights(IXLWorksheet ws, int rowCount)
+    {
+        for (var i = 2; i <= rowCount + 1; i++)
+            ws.Row(i).Height = DataRowHeight;
+    }
 
     private static void StyleHeaderRow(IXLWorksheet ws, string[] cols)
     {
@@ -150,9 +153,9 @@ public static class ExcelExporter
 
     private static object?[] GetRowValues(NormalizedRow r) =>
     [
-        r.Name, r.WordCount, r.ShortestErrata,
-        r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype, r.Materials,
+        r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
+        r.WordCount, r.ShortestErrata, r.Materials,
+        r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
         r.SetName, r.SetCode, r.SetRarity,
         r.BanTcg, r.BanOcg,
         r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible

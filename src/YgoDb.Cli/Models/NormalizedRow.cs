@@ -31,9 +31,9 @@ public class NormalizedRow
 
     public static readonly string[] OutputColumns =
     [
-        "name", "word_count", "shortest_errata",
-        "type", "attribute", "race", "level", "atk", "def",
-        "scale", "linkval", "linkmarkers", "archetype", "materials",
+        "name", "type", "attribute", "race", "level", "atk", "def",
+        "word_count", "shortest_errata", "materials",
+        "scale", "linkval", "linkmarkers", "archetype",
         "set_name", "set_code", "set_rarity",
         "ban_tcg", "ban_ocg",
         "latest_errata", "desc", "id", "image_url", "is_eligible"

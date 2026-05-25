@@ -17,51 +17,35 @@ public static partial class MaterialStripper
     [GeneratedRegex(EffectStartersPattern, RegexOptions.Compiled)]
     private static partial Regex EffectStarterRegex();
 
-    public static string StripMaterialLine(string text)
+    private static (string? Material, string Effect) SplitMaterialLine(string text)
     {
-        if (string.IsNullOrEmpty(text)) return text;
+        if (string.IsNullOrEmpty(text)) return (null, text);
 
         var newlineIdx = text.IndexOf('\n');
         if (newlineIdx >= 0)
         {
             var remainder = text[(newlineIdx + 1)..].Trim();
-            return string.IsNullOrEmpty(remainder) ? text : remainder;
+            return string.IsNullOrEmpty(remainder)
+                ? (null, text)
+                : (text[..newlineIdx].Trim(), remainder);
         }
 
-        if (!MaterialStartRegex().IsMatch(text)) return text;
+        if (!MaterialStartRegex().IsMatch(text)) return (null, text);
 
         var match = EffectStarterRegex().Match(text);
-        if (!match.Success || match.Index == 0) return text;
+        if (!match.Success || match.Index == 0) return (null, text);
 
-        return text[match.Index..];
+        return (text[..match.Index].Trim(), text[match.Index..]);
     }
 
-    private static string? ExtractMaterialLine(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return null;
-
-        var newlineIdx = text.IndexOf('\n');
-        if (newlineIdx >= 0)
-        {
-            var remainder = text[(newlineIdx + 1)..].Trim();
-            return string.IsNullOrEmpty(remainder) ? null : text[..newlineIdx].Trim();
-        }
-
-        if (!MaterialStartRegex().IsMatch(text)) return null;
-
-        var match = EffectStarterRegex().Match(text);
-        if (!match.Success || match.Index == 0) return null;
-
-        return text[..match.Index].Trim();
-    }
+    public static string StripMaterialLine(string text) => SplitMaterialLine(text).Effect;
 
     public static NormalizedRow PostprocessRow(NormalizedRow row, int wordLimit)
     {
         if (!row.Type.IsExtraDeckType())
             return row;
 
-        row.Materials = ExtractMaterialLine(row.Desc);
-        row.Desc = StripMaterialLine(row.Desc);
+        (row.Materials, row.Desc) = SplitMaterialLine(row.Desc);
         row.ShortestErrata = StripMaterialLine(row.ShortestErrata);
         row.LatestErrata = StripMaterialLine(row.LatestErrata);
 

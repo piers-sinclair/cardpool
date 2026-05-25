@@ -41,10 +41,14 @@ public static class HtmlErrataScraper
 
                 var text = td.TextContent;
                 var normalised = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-                if (!string.IsNullOrEmpty(normalised))
+                if (!string.IsNullOrEmpty(normalised) && !ContainsCjk(normalised))
                     results.Add(normalised);
             }
         }
         return results;
     }
+
+    // Hiragana U+3040–U+309F, Katakana U+30A0–U+30FF, CJK Unified Ideographs U+4E00–U+9FFF
+    private static bool ContainsCjk(string text) =>
+        text.Any(c => c is (>= '぀' and <= 'ゟ') or (>= '゠' and <= 'ヿ') or (>= '一' and <= '鿿'));
 }

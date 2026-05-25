@@ -21,7 +21,9 @@ public static class ExportPipeline
         using var yugipedia = new YugipediaClient(http);
 
         Console.WriteLine("Fetching cards from YGOProDeck...");
-        var allCards = await ygoDeck.FetchAllCardsAsync();
+        var allCards = (await ygoDeck.FetchAllCardsAsync())
+            .Where(c => !c.Type.IsToken() && !c.Type.IsSkillCard())
+            .ToList();
         Console.WriteLine($"Fetched {allCards.Count} cards.");
 
         var candidates = allCards

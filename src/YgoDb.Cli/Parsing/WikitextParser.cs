@@ -46,7 +46,7 @@ public static partial class WikitextParser
         foreach (var (_, raw) in lores)
         {
             var text = await LoreFullAsync(raw);
-            if (!string.IsNullOrWhiteSpace(text))
+            if (!string.IsNullOrWhiteSpace(text) && !ContainsCjk(text))
                 results.Add(text);
         }
         return results;
@@ -76,4 +76,8 @@ public static partial class WikitextParser
 
     private static string NormaliseWhitespace(string text) =>
         string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+
+    // Hiragana U+3040–U+309F, Katakana U+30A0–U+30FF, CJK Unified Ideographs U+4E00–U+9FFF
+    private static bool ContainsCjk(string text) =>
+        text.Any(c => c is (>= '぀' and <= 'ゟ') or (>= '゠' and <= 'ヿ') or (>= '一' and <= '鿿'));
 }

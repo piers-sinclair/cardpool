@@ -95,6 +95,14 @@ Python's BeautifulSoup `get_text("")` (empty separator) is critical: punctuation
 
 Yugipedia stores `<del>removed</del>` and `<ins>added</ins>` diff markup. **Both tags must be unwrapped** (call `ReplaceWith(ChildNodes)` on each), not stripped. Stripping either tag gives garbled or incomplete text.
 
+### CJK lore filtering
+
+Some Yugipedia errata pages (e.g. OCG-only cards like Treasure Map) have an `== English ==` section that contains only Japanese/CJK lore text. Both `WikitextParser.ExtractEnglishLoresAsync` and `HtmlErrataScraper.ParseErrataTableAsync` discard any lore string containing Hiragana, Katakana, or CJK Unified Ideographs. When all lore versions are filtered the caller receives an empty list and falls back to the YGOProDeck `desc`.
+
+### Card type filtering — Tokens and Skill Cards
+
+`ExportPipeline` filters out non-playable card types before normalization using `CardTypeExtensions.IsToken()` and `CardTypeExtensions.IsSkillCard()`. Tokens (`type = "Token"`) and Skill Cards (`type = "Skill Card"`) are excluded from all exports.
+
 ### Incomplete Pendulum errata detection
 
 Yugipedia sometimes stores only one section (`[Pendulum Effect]` or `[Monster Effect]`) for Pendulum Effect Monsters. `CardNormalizer.Normalize` detects this (`hasPend != hasMons`) and falls back to the YGOProDeck `desc`, which always has both sections.

@@ -22,40 +22,14 @@ public class CsvExporterTests
         IsEligible = true,
     };
 
-    [Fact]
-    public void Export_WithMaterials_MaterialsColumnBeforeShortestErrata()
+    private static (string[] Header, string[] FirstRow) ExportAndParse(List<NormalizedRow> rows)
     {
-        var rows = new List<NormalizedRow> { MakeRow(materials: "1 Tuner + 1 non-Tuner") };
-        var path = Path.GetTempFileName();
-        try
-        {
-            CsvExporter.Export(rows, path);
-            var header = File.ReadLines(path).First().Split(',');
-            var materialsIdx = Array.IndexOf(header, "materials");
-            var shortestIdx = Array.IndexOf(header, "shortest_errata");
-            materialsIdx.ShouldBeGreaterThan(-1);
-            shortestIdx.ShouldBeGreaterThan(-1);
-            materialsIdx.ShouldBeLessThan(shortestIdx);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
-    }
-
-    [Fact]
-    public void Export_WithMaterials_MaterialsValueAlignedWithHeader()
-    {
-        var rows = new List<NormalizedRow> { MakeRow(materials: "1 Tuner + 1 non-Tuner") };
         var path = Path.GetTempFileName();
         try
         {
             CsvExporter.Export(rows, path);
             var lines = File.ReadAllLines(path);
-            var header = lines[0].Split(',');
-            var data = lines[1].Split(',');
-            var materialsIdx = Array.IndexOf(header, "materials");
-            data[materialsIdx].ShouldBe("1 Tuner + 1 non-Tuner");
+            return (lines[0].Split(','), lines.Length > 1 ? lines[1].Split(',') : []);
         }
         finally
         {
@@ -64,19 +38,27 @@ public class CsvExporterTests
     }
 
     [Fact]
+    public void Export_WithMaterials_MaterialsColumnBeforeShortestErrata()
+    {
+        var (header, _) = ExportAndParse([MakeRow(materials: "1 Tuner + 1 non-Tuner")]);
+        var materialsIdx = Array.IndexOf(header, "materials");
+        var shortestIdx = Array.IndexOf(header, "shortest_errata");
+        materialsIdx.ShouldNotBe(-1);
+        shortestIdx.ShouldNotBe(-1);
+        materialsIdx.ShouldBeLessThan(shortestIdx);
+    }
+
+    [Fact]
+    public void Export_WithMaterials_MaterialsValueAlignedWithHeader()
+    {
+        var (header, data) = ExportAndParse([MakeRow(materials: "1 Tuner + 1 non-Tuner")]);
+        data[Array.IndexOf(header, "materials")].ShouldBe("1 Tuner + 1 non-Tuner");
+    }
+
+    [Fact]
     public void Export_WithoutMaterials_NoMaterialsColumn()
     {
-        var rows = new List<NormalizedRow> { MakeRow(materials: null) };
-        var path = Path.GetTempFileName();
-        try
-        {
-            CsvExporter.Export(rows, path);
-            var header = File.ReadLines(path).First().Split(',');
-            Array.IndexOf(header, "materials").ShouldBe(-1);
-        }
-        finally
-        {
-            File.Delete(path);
-        }
+        var (header, _) = ExportAndParse([MakeRow(materials: null)]);
+        Array.IndexOf(header, "materials").ShouldBe(-1);
     }
 }

@@ -39,7 +39,6 @@ tests/
   CardPool.Tests/
     WordCounterTests.cs         ← unit tests, no network
     MaterialStripperTests.cs    ← unit tests, no network
-    ErrataIntegrationTests.cs   ← live API tests (Category=Integration)
     GlobalUsings.cs
 output/                   ← generated Excel/CSV files (git-ignored)
 Directory.Build.props     ← shared MSBuild properties (TreatWarningsAsErrors, etc.)
@@ -75,9 +74,7 @@ dotnet run --project src/CardPool.Cli -- export --output ~/ygo
 dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 
 # Tests
-dotnet test tests/CardPool.Tests --filter "Category!=Integration"       # unit tests only (fast)
-dotnet test tests/CardPool.Tests --filter "Category=Integration"        # live API tests (~5 min)
-dotnet test tests/CardPool.Tests                                        # all tests
+dotnet test tests/CardPool.Tests
 ```
 
 ---
@@ -216,10 +213,7 @@ See the Python ygodb `CLAUDE.md` for the full word-counting specification.
 
 ## Testing strategy
 
-- **Unit tests** (`WordCounterTests`, `MaterialStripperTests`, `CardNormalizerTests`) — pure logic, no network, always run in CI.
-- **Integration tests** (`ErrataIntegrationTests`, `[Trait("Category","Integration")]`) — hit live APIs;
-  assert exact word counts for 11 known-tricky cards (same card list as Python `tests.py`).
-- Both suites run in CI (`.github/workflows/ci.yml`).
+- **Unit tests** (`WordCounterTests`, `MaterialStripperTests`, `CardNormalizerTests`) — pure logic, no network, run in CI.
 
 ### Test naming convention
 

@@ -3,8 +3,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <!-- CA1707: test methods intentionally use Method_Condition_Result naming -->
-    <!-- CA1001: disposable fields managed by IAsyncLifetime, not IDisposable -->
-    <NoWarn>CA1707;CA1001</NoWarn>
+    <NoWarn>CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

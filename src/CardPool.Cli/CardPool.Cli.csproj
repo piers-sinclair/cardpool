@@ -12,8 +12,13 @@
     <Description>Card pool generator for trading card game formats. Applies errata history and configurable criteria (e.g. word count) to export eligible card pools to Excel/CSV.</Description>
     <PackageTags>yugioh;tcg;card-pool;format;cli</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/piers-sinclair/cardpool</RepositoryUrl>
+    <RepositoryUrl>https://github.com/piers-sinclair/ygo-word-format-exporter</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.4.0" />

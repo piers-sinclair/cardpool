@@ -1,9 +1,9 @@
-# YgoDb (.NET) — Claude Code Context
+# CardPool (.NET) — Claude Code Context
 
-YgoDb is a .NET 10 port of the Python ygodb tool. It fetches ~12,000 Yu-Gi-Oh! cards from
-YGOProDeck, enriches them with errata history from Yugipedia, applies word-count rules, and
-exports results to Excel/CSV. Used for Edison format play to identify cards eligible under the ≤N
-words rule.
+CardPool is a card pool analysis tool for trading card games — designed to support multiple TCGs,
+with Yu-Gi-Oh! as the first implementation. It fetches ~12,000 Yu-Gi-Oh! cards from YGOProDeck,
+enriches them with errata history from Yugipedia, applies word-count rules, and exports results to
+Excel/CSV. Used for Edison format play to identify cards eligible under the ≤N words rule.
 
 ---
 
@@ -26,7 +26,7 @@ words rule.
 
 ```
 src/
-  YgoDb.Cli/
+  CardPool.Cli/
     Api/                  ← YgoProDeckClient, YugipediaClient (HTTP + rate limiting)
     Parsing/              ← WikitextParser (wikitext→lore), HtmlErrataScraper (inspect cmd)
     WordCount/            ← WordCounter (pure logic, no I/O)
@@ -36,7 +36,7 @@ src/
     GlobalUsings.cs       ← global usings for the project
     Program.cs            ← System.CommandLine entry point
 tests/
-  YgoDb.Tests/
+  CardPool.Tests/
     WordCounterTests.cs         ← unit tests, no network
     MaterialStripperTests.cs    ← unit tests, no network
     ErrataIntegrationTests.cs   ← live API tests (Category=Integration)
@@ -52,24 +52,24 @@ global.json               ← pins .NET SDK version to 10.x
 
 ```bash
 # Export (single command with options replaces 6 Python entry scripts)
-dotnet run --project src/YgoDb.Cli -- export                         # full, ≤20 words
-dotnet run --project src/YgoDb.Cli -- export --words 25              # full, ≤25 words
-dotnet run --project src/YgoDb.Cli -- export --words 30              # full, ≤30 words
-dotnet run --project src/YgoDb.Cli -- export --no-materials          # strip Extra Deck, ≤20w; keeps stripped materials in a separate column
-dotnet run --project src/YgoDb.Cli -- export --no-materials --words 25
+dotnet run --project src/CardPool.Cli -- export                         # full, ≤20 words
+dotnet run --project src/CardPool.Cli -- export --words 25              # full, ≤25 words
+dotnet run --project src/CardPool.Cli -- export --words 30              # full, ≤30 words
+dotnet run --project src/CardPool.Cli -- export --no-materials          # strip Extra Deck, ≤20w; keeps stripped materials in a separate column
+dotnet run --project src/CardPool.Cli -- export --no-materials --words 25
 
 # --extra-deck: which Extra Deck types to include (all|none|fusion|synchro|xyz|link, repeatable)
-dotnet run --project src/YgoDb.Cli -- export --extra-deck none        # main deck cards only
-dotnet run --project src/YgoDb.Cli -- export --extra-deck fusion synchro   # fusion + synchro only
-dotnet run --project src/YgoDb.Cli -- export --no-materials --extra-deck synchro xyz
+dotnet run --project src/CardPool.Cli -- export --extra-deck none        # main deck cards only
+dotnet run --project src/CardPool.Cli -- export --extra-deck fusion synchro   # fusion + synchro only
+dotnet run --project src/CardPool.Cli -- export --no-materials --extra-deck synchro xyz
 
 # Inspect a single card (replaces inspect_card.py)
-dotnet run --project src/YgoDb.Cli -- inspect "Raiza the Storm Monarch"
+dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 
 # Tests
-dotnet test tests/YgoDb.Tests --filter "Category!=Integration"       # unit tests only (fast)
-dotnet test tests/YgoDb.Tests --filter "Category=Integration"        # live API tests (~5 min)
-dotnet test tests/YgoDb.Tests                                        # all tests
+dotnet test tests/CardPool.Tests --filter "Category!=Integration"       # unit tests only (fast)
+dotnet test tests/CardPool.Tests --filter "Category=Integration"        # live API tests (~5 min)
+dotnet test tests/CardPool.Tests                                        # all tests
 ```
 
 ---

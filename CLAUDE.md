@@ -56,16 +56,22 @@ cpool export --words 25
 cpool inspect "Raiza the Storm Monarch"
 
 # Run from source (development):
-dotnet run --project src/CardPool.Cli -- export                         # default: ≤25 words, no-materials, no-link, no-pendulum
+dotnet run --project src/CardPool.Cli -- export                                        # default: ≤25 words, no-materials, exclude pendulum link
 dotnet run --project src/CardPool.Cli -- export --words 25
 dotnet run --project src/CardPool.Cli -- export --words 30
-dotnet run --project src/CardPool.Cli -- export --no-materials false     # include full material text
-dotnet run --project src/CardPool.Cli -- export --no-pendulum false      # include Pendulum monsters
+dotnet run --project src/CardPool.Cli -- export --words -1                             # no word limit — export all cards
+dotnet run --project src/CardPool.Cli -- export --no-materials false                   # include full material text
 
-# --extra-deck: which Extra Deck types to include (all|none|fusion|synchro|xyz|link, repeatable)
-dotnet run --project src/CardPool.Cli -- export --extra-deck none        # main deck cards only
-dotnet run --project src/CardPool.Cli -- export --extra-deck fusion synchro
-dotnet run --project src/CardPool.Cli -- export --extra-deck all         # include Link too
+# --exclude-types: exclude cards whose type contains any of these fragments (case-insensitive, repeatable)
+# default is "pendulum link"; use "none" to include all types
+dotnet run --project src/CardPool.Cli -- export --exclude-types none                   # include all card types
+dotnet run --project src/CardPool.Cli -- export --exclude-types pendulum               # include Link, exclude Pendulum
+dotnet run --project src/CardPool.Cli -- export --exclude-types fusion synchro xyz link # main deck only
+dotnet run --project src/CardPool.Cli -- export --exclude-types pendulum link flip tuner
+
+# --errata-mode: which text version to evaluate for eligibility
+dotnet run --project src/CardPool.Cli -- export --errata-mode latest                   # current text only (fast — no Yugipedia fetch)
+dotnet run --project src/CardPool.Cli -- export --errata-mode shortest                 # any historical printing (default)
 
 # --output: custom output directory
 dotnet run --project src/CardPool.Cli -- export --output ~/ygo

@@ -9,6 +9,7 @@ public static class ExportPipeline
         string outputXlsx,
         string outputCsv,
         int wordLimit = 20,
+        bool latestOnly = false,
         Func<NormalizedRow, int, NormalizedRow>? rowPostprocess = null,
         Func<NormalizedRow, bool>? rowFilter = null)
     {
@@ -22,41 +23,46 @@ public static class ExportPipeline
             .ToList();
         Console.WriteLine($"Fetched {allCards.Count} cards.");
 
-        var candidates = allCards
-            .Where(c => CardNormalizer.NeedsErrataLookup(c, wordLimit))
-            .ToList();
-        Console.WriteLine($"{candidates.Count} cards need errata lookup.");
-
-        var batches = candidates.Chunk(BatchSize).ToArray();
         var errataMap = new Dictionary<string, (string? Shortest, string? Latest)>(
-            candidates.Count, StringComparer.OrdinalIgnoreCase);
-        var semaphore = new SemaphoreSlim(MaxWorkers);
-        var processed = 0;
+            StringComparer.OrdinalIgnoreCase);
 
-        var tasks = batches.Select(async batch =>
+        if (!latestOnly && wordLimit != int.MaxValue)
         {
-            await semaphore.WaitAsync();
-            try
+            var candidates = allCards
+                .Where(c => CardNormalizer.NeedsErrataLookup(c, wordLimit))
+                .ToList();
+            Console.WriteLine($"{candidates.Count} cards need errata lookup.");
+
+            var batches = candidates.Chunk(BatchSize).ToArray();
+            var semaphore = new SemaphoreSlim(MaxWorkers);
+            var processed = 0;
+
+            var tasks = batches.Select(async batch =>
             {
-                var names = batch.Select(c => c.Name).ToList();
-                var result = await yugipedia.FetchErrataAsync(names);
-                lock (errataMap)
+                await semaphore.WaitAsync();
+                try
                 {
-                    foreach (var kvp in result)
-                        errataMap[kvp.Key] = kvp.Value;
+                    var names = batch.Select(c => c.Name).ToList();
+                    var result = await yugipedia.FetchErrataAsync(names);
+                    lock (errataMap)
+                    {
+                        foreach (var kvp in result)
+                            errataMap[kvp.Key] = kvp.Value;
 
-                    processed += batch.Length;
-                    if (processed % 500 == 0 || processed == candidates.Count)
-                        Console.WriteLine($"  Processed {processed}/{candidates.Count} errata lookups...");
+                        processed += batch.Length;
+                        if (processed % 500 == 0 || processed == candidates.Count)
+                            Console.WriteLine($"  Processed {processed}/{candidates.Count} errata lookups...");
+                    }
                 }
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-        });
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
 
-        await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
+        }
+
         Console.WriteLine("Errata fetch complete. Normalizing...");
 
         var rows = new List<NormalizedRow>(allCards.Count);

@@ -58,3 +58,5 @@ $RECYCLE.BIN/
 ## Project-specific
 # Generated export files (run dotnet run -- export to regenerate)
 output/
+# Local card data cache (refreshed automatically after 24 hours)
+.cardpool/

@@ -1,7 +1,3 @@
-using System.Text.RegularExpressions;
-using CardPool.Cli.Models;
-using CardPool.Cli.WordCount;
-
 namespace CardPool.Cli.Pipeline;
 
 public static partial class CardNormalizer

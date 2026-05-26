@@ -1,7 +1,3 @@
-using System.Text.RegularExpressions;
-using AngleSharp;
-using AngleSharp.Dom;
-
 namespace CardPool.Cli.Parsing;
 
 public static partial class WikitextParser

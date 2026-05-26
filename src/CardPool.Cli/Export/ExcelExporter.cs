@@ -1,5 +1,4 @@
 using ClosedXML.Excel;
-using CardPool.Cli.Models;
 
 namespace CardPool.Cli.Export;
 

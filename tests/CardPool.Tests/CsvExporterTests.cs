@@ -1,5 +1,3 @@
-using CardPool.Cli.Export;
-
 namespace CardPool.Tests;
 
 public class CsvExporterTests

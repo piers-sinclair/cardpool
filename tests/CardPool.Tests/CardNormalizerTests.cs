@@ -1,5 +1,3 @@
-using CardPool.Cli.Models;
-
 namespace CardPool.Tests;
 
 public class CardNormalizerTests

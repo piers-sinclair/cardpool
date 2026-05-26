@@ -1,7 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using CardPool.Cli.Models;
-
 namespace CardPool.Cli.Api;
 
 public sealed class YgoProDeckClient(HttpClient http) : IDisposable

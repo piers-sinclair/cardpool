@@ -1,9 +1,3 @@
-using System.CommandLine;
-using CardPool.Cli.Api;
-using CardPool.Cli.Parsing;
-using CardPool.Cli.Pipeline;
-using CardPool.Cli.WordCount;
-
 var rootCommand = new RootCommand("CardPool — Yu-Gi-Oh! card database export tool");
 
 var exportCommand = new Command("export", "Export card data to Excel/CSV");

@@ -1,6 +1,3 @@
-using AngleSharp;
-using AngleSharp.Dom;
-
 namespace CardPool.Cli.Parsing;
 
 public static class HtmlErrataScraper

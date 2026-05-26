@@ -1,5 +1,3 @@
-using CardPool.Cli.Api;
-
 namespace CardPool.Tests;
 
 public sealed class IntegrationData : IAsyncLifetime

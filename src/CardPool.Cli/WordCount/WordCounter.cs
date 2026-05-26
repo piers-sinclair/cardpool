@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace CardPool.Cli.WordCount;
 
 public static partial class WordCounter

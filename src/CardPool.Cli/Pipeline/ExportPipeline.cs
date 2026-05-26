@@ -1,7 +1,3 @@
-using CardPool.Cli.Api;
-using CardPool.Cli.Export;
-using CardPool.Cli.Models;
-
 namespace CardPool.Cli.Pipeline;
 
 public static class ExportPipeline

@@ -60,12 +60,12 @@ exportCommand.SetAction(async parseResult =>
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
-    var latestOnly = errataMode.Equals("latest", StringComparison.OrdinalIgnoreCase);
+    var latestOnly = errataMode.EqualsIgnoreCase("latest");
     var wordLimit = words == -1 ? int.MaxValue : words;
 
-    var typesSuffix = excludeTypes.Contains("none", StringComparer.OrdinalIgnoreCase) || excludeTypes.Length == 0
+    var typesSuffix = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase("none")
         ? "_all_types"
-        : "_excl_" + string.Join("_", excludeTypes.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
+        : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
     var errataSuffix = latestOnly ? "_latest" : "";
     var materialsPart = noMaterials ? "no_materials" : "with_materials";
     var wordsPart = words == 25 ? "" : words == -1 ? "_all_words" : $"_{words}words";
@@ -83,8 +83,8 @@ exportCommand.SetAction(async parseResult =>
 
 static bool IsTypeIncluded(string cardType, string[] excludeTypes) =>
     excludeTypes.Length == 0
-    || excludeTypes.Contains("none", StringComparer.OrdinalIgnoreCase)
-    || excludeTypes.All(fragment => !cardType.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+    || excludeTypes.ContainsIgnoreCase("none")
+    || excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
 
 rootCommand.Add(exportCommand);
 

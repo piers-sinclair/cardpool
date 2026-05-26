@@ -28,7 +28,7 @@ public static class ExportPipeline
         var rows = new List<NormalizedRow>(allCards.Count);
         foreach (var card in allCards)
         {
-            errataMap.TryGetValue(card.Name, out var errata);
+            var errata = errataMap.GetValueOrDefault(card.Name);
             var row = CardNormalizer.Normalize(card, errata.Shortest, errata.Latest, wordLimit);
 
             if (stripMaterials)

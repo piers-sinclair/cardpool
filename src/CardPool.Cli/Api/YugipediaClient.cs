@@ -41,7 +41,7 @@ public sealed class YugipediaClient : IDisposable
             if (page is null || page["missing"] is not null) continue;
 
             var title = page["title"]?.GetValue<string>() ?? "";
-            var cardName = title.StartsWith(ErrataPagePrefix, StringComparison.OrdinalIgnoreCase)
+            var cardName = title.StartsWithIgnoreCase(ErrataPagePrefix)
                 ? title[ErrataPagePrefix.Length..]
                 : title;
 
@@ -57,7 +57,7 @@ public sealed class YugipediaClient : IDisposable
         {
             if (pageMap.TryGetValue(name, out var lores))
             {
-                var shortest = lores.MinBy(t => t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
+                var shortest = lores.MinBy(WordCounter.CountWords);
                 var latest = lores[^1];
                 result[name] = (shortest, latest);
             }

@@ -42,7 +42,7 @@ public static partial class WikitextParser
         foreach (var (_, raw) in lores)
         {
             var text = await LoreFullAsync(raw);
-            if (!string.IsNullOrWhiteSpace(text) && !ContainsJapaneseCharacters(text))
+            if (!string.IsNullOrWhiteSpace(text) && !text.ContainsJapanese())
                 results.Add(text);
         }
         return results;
@@ -57,7 +57,7 @@ public static partial class WikitextParser
             tag.ReplaceWith(tag.ChildNodes.ToArray());
 
         var text = doc.Body?.TextContent ?? "";
-        return NormaliseWhitespace(text);
+        return text.NormalizeWhitespace();
     }
 
     private static string ApplyPreamble(string raw)
@@ -69,14 +69,4 @@ public static partial class WikitextParser
         text = BrTagRegex().Replace(text, " ");
         return text;
     }
-
-    private static string NormaliseWhitespace(string text) =>
-        string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-
-    private static bool ContainsJapaneseCharacters(string text) =>
-        text.Any(c => IsHiragana(c) || IsKatakana(c) || IsKanji(c));
-
-    private static bool IsHiragana(char c) => c is >= '぀' and <= 'ゟ';
-    private static bool IsKatakana(char c) => c is >= '゠' and <= 'ヿ';
-    private static bool IsKanji(char c) => c is >= '一' and <= '鿿';
 }

@@ -3,26 +3,26 @@ namespace CardPool.Cli.Models;
 internal static class CardTypeExtensions
 {
     internal static bool IsPureNormalMonster(this string cardType) =>
-        cardType.Contains("Normal", StringComparison.OrdinalIgnoreCase)
-        && cardType.Contains("Monster", StringComparison.OrdinalIgnoreCase)
-        && !cardType.Contains("Pendulum", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Normal")
+        && cardType.ContainsIgnoreCase("Monster")
+        && !cardType.ContainsIgnoreCase("Pendulum");
 
     internal static bool IsPendulumType(this string cardType) =>
-        cardType.Contains("Pendulum", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Pendulum");
 
     internal static bool IsPendulumEffectType(this string cardType) =>
-        cardType.Contains("Pendulum", StringComparison.OrdinalIgnoreCase)
-        && !cardType.Contains("Normal", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Pendulum")
+        && !cardType.ContainsIgnoreCase("Normal");
 
     internal static bool IsExtraDeckType(this string cardType) =>
-        cardType.Contains("Fusion", StringComparison.OrdinalIgnoreCase)
-        || cardType.Contains("Synchro", StringComparison.OrdinalIgnoreCase)
-        || cardType.Contains("XYZ", StringComparison.OrdinalIgnoreCase)
-        || cardType.Contains("Link", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Fusion")
+        || cardType.ContainsIgnoreCase("Synchro")
+        || cardType.ContainsIgnoreCase("XYZ")
+        || cardType.ContainsIgnoreCase("Link");
 
     internal static bool IsToken(this string cardType) =>
-        cardType.Contains("Token", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Token");
 
     internal static bool IsSkillCard(this string cardType) =>
-        cardType.Contains("Skill", StringComparison.OrdinalIgnoreCase);
+        cardType.ContainsIgnoreCase("Skill");
 }

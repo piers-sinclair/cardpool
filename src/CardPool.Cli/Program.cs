@@ -69,7 +69,7 @@ exportCommand.SetAction(async parseResult =>
         ? "_all_types"
         : "_excl_" + string.Join("_", excludeTypes.OrderBy(t => t, StringComparer.OrdinalIgnoreCase));
     var errataSuffix = latestOnly ? "_latest" : "";
-    var materialsPart = noMaterials ? "no_materials" : "full";
+    var materialsPart = noMaterials ? "no_materials" : "with_materials";
     var wordsPart = words == 25 ? "" : words == -1 ? "_all_words" : $"_{words}words";
     var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
@@ -77,7 +77,7 @@ exportCommand.SetAction(async parseResult =>
     await ExportPipeline.RunAsync(
         $"{outputDirectory}/{suffix}.xlsx",
         $"{outputDirectory}/{suffix}.csv",
-        wordLimit: words,
+        wordLimit: wordLimit,
         latestOnly: latestOnly,
         rowPostprocess: noMaterials
             ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
@@ -87,9 +87,11 @@ exportCommand.SetAction(async parseResult =>
 
 static Func<NormalizedRow, bool>? BuildTypeFilter(string[] excludeTypes)
 {
-    if (excludeTypes.Contains("none", StringComparer.OrdinalIgnoreCase)) return null;
-    if (excludeTypes.Length == 0) return null;
-    return row => !excludeTypes.Any(t => row.Type.Contains(t, StringComparison.OrdinalIgnoreCase));
+    if (excludeTypes.Length == 0 || excludeTypes.Contains("none", StringComparer.OrdinalIgnoreCase))
+        return null;
+
+    return row => excludeTypes.All(fragment =>
+        !row.Type.Contains(fragment, StringComparison.OrdinalIgnoreCase));
 }
 
 rootCommand.Add(exportCommand);

@@ -18,6 +18,9 @@ jobs:
         with:
           dotnet-version: '10.x'
 
+      - name: Restore dependencies
+        run: dotnet restore
+
       - name: Build
         run: dotnet build src/CardPool.Cli --configuration Release --no-restore
 

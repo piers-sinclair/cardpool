@@ -130,9 +130,7 @@ dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 ### Tests
 
 ```bash
-dotnet test tests/CardPool.Tests --filter "Category!=Integration"   # unit tests (fast)
-dotnet test tests/CardPool.Tests --filter "Category=Integration"    # live API tests (~5 min)
-dotnet test tests/CardPool.Tests                                    # all tests
+dotnet test tests/CardPool.Tests
 ```
 
 ---

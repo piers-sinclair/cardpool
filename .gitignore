@@ -21,8 +21,8 @@ coverage.xml
 *.coveragexml
 
 # Publish profiles
-**/Properties/PublishProfiles/
 **/publish/
+!**/Properties/PublishProfiles/*.pubxml
 
 # dotnet user secrets
 secrets.json

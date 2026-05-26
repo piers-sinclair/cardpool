@@ -1,43 +1,63 @@
-var rootCommand = new RootCommand("CardPool — trading card game pool analysis and export tool");
+var rootCommand = new RootCommand(
+    "CardPool — trading card game pool analysis and export tool.\n" +
+    "Fetches ~12,000 cards from YGOProDeck, applies errata history from Yugipedia,\n" +
+    "and exports cards eligible under configurable criteria such as word count.");
 
-var exportCommand = new Command("export", "Export card data to Excel/CSV");
+var exportCommand = new Command("export",
+    "Export all card data to Excel (.xlsx) and CSV.\n" +
+    "Examples:\n" +
+    "  cpool export                              # default: ≤25 words, no-materials, no-link, no-pendulum\n" +
+    "  cpool export --words 20                   # ≤20 words\n" +
+    "  cpool export --no-materials false         # include full material text in word count\n" +
+    "  cpool export --extra-deck all             # include all Extra Deck types (including Link)\n" +
+    "  cpool export --extra-deck none            # main-deck cards only\n" +
+    "  cpool export --extra-deck fusion synchro  # Fusion + Synchro only\n" +
+    "  cpool export --no-pendulum false          # include Pendulum monsters\n" +
+    "  cpool export --words 30 --output ~/ygo    # ≤30 words, custom output dir");
 
 var wordsOption = new Option<int>("--words")
 {
-    Description = "Word-count threshold for eligibility",
+    Description = "Word-count threshold — cards with any printing at or below this limit are included (default: 25)",
     DefaultValueFactory = _ => 25
 };
 
 var noMaterialsOption = new Option<bool>("--no-materials")
 {
-    Description = "Strip material requirements from Extra Deck monsters",
+    Description = "Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column (default: true)",
     DefaultValueFactory = _ => true
 };
 
 var extraDeckOption = new Option<string[]>("--extra-deck")
 {
-    Description = "Extra Deck types to include: all, none, fusion, synchro, xyz, link (repeatable). Default: fusion synchro xyz.",
+    Description = "Extra Deck types to include — valid values: all, none, fusion, synchro, xyz, link (repeatable, default: fusion synchro xyz)",
     AllowMultipleArgumentsPerToken = true,
     DefaultValueFactory = _ => ["fusion", "synchro", "xyz"]
 };
 
 var noPendulumOption = new Option<bool>("--no-pendulum")
 {
-    Description = "Exclude Pendulum cards",
+    Description = "Exclude Pendulum monsters from output (default: true)",
     DefaultValueFactory = _ => true
+};
+
+var outputOption = new Option<string>("--output")
+{
+    Description = "Directory to write output files to (default: ./output)",
+    DefaultValueFactory = _ => "output"
 };
 
 exportCommand.Add(wordsOption);
 exportCommand.Add(noMaterialsOption);
 exportCommand.Add(extraDeckOption);
 exportCommand.Add(noPendulumOption);
+exportCommand.Add(outputOption);
 
-const string OutputDirectory = "output";
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
     var noMaterials = parseResult.GetValue(noMaterialsOption);
     var noPendulum = parseResult.GetValue(noPendulumOption);
+    var outputDirectory = parseResult.GetValue(outputOption)!;
     var extraDeckTypes = new HashSet<string>(
         parseResult.GetValue(extraDeckOption) ?? ["all"],
         StringComparer.OrdinalIgnoreCase);
@@ -63,10 +83,10 @@ exportCommand.SetAction(async parseResult =>
         ? words == 25 ? $"no_materials{extraDeckSuffix}{pendulumSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}{pendulumSuffix}_export"
         : words == 25 ? $"full{extraDeckSuffix}{pendulumSuffix}_export" : $"full_{words}words{extraDeckSuffix}{pendulumSuffix}_export";
 
-    Directory.CreateDirectory(OutputDirectory);
+    Directory.CreateDirectory(outputDirectory);
     await ExportPipeline.RunAsync(
-        $"{OutputDirectory}/{suffix}.xlsx",
-        $"{OutputDirectory}/{suffix}.csv",
+        $"{outputDirectory}/{suffix}.xlsx",
+        $"{outputDirectory}/{suffix}.csv",
         wordLimit: words,
         rowPostprocess: noMaterials
             ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
@@ -91,11 +111,15 @@ static Func<NormalizedRow, bool>? BuildExtraDeckFilter(HashSet<string> types)
 
 rootCommand.Add(exportCommand);
 
-var inspectCommand = new Command("inspect", "Show errata history for a single card");
+var inspectCommand = new Command("inspect",
+    "Show all errata versions for a single card with word counts.\n" +
+    "Examples:\n" +
+    "  cpool inspect \"Raiza the Storm Monarch\"\n" +
+    "  cpool inspect \"Dark Magician\"");
 
 var cardNameArg = new Argument<string>("card-name")
 {
-    Description = "Name of the card to inspect"
+    Description = "Exact card name (case-insensitive)"
 };
 inspectCommand.Add(cardNameArg);
 

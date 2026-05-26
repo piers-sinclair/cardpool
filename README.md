@@ -8,41 +8,132 @@ Card pool analysis tool for trading card games. Fetches card data from game-spec
 
 **Current implementation: Yu-Gi-Oh! (Edison format).** The goal is to support multiple TCGs — Yu-Gi-Oh! is the first. Cards are fetched from [YGOProDeck](https://ygoprodeck.com/) and enriched with errata history from [Yugipedia](https://yugipedia.com/).
 
-The core purpose: identify cards whose **shortest known errata version** falls within a word-count threshold (default: ≤20 words), making them eligible under Edison format's word-count rule regardless of current oracle text.
+The core purpose: identify cards whose **shortest known errata version** falls within a word-count threshold (default: ≤25 words), making them eligible under Edison format's word-count rule regardless of current oracle text.
 
 ---
 
-## Requirements
+## Installation
+
+### Option A — .NET Global Tool (recommended for developers)
+
+Requires [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
+
+```bash
+dotnet tool install -g CardPool
+cpool --help
+```
+
+To update: `dotnet tool update -g CardPool`  
+To remove: `dotnet tool uninstall -g CardPool`
+
+### Option B — Self-contained executable (no .NET required)
+
+Download the latest zip for your platform from the [Releases](https://github.com/piers-sinclair/cardpool/releases) page:
+
+| Platform | File |
+|----------|------|
+| Windows x64 | `cpool-win-x64.zip` |
+| Windows ARM64 | `cpool-win-arm64.zip` |
+| macOS ARM64 (Apple Silicon) | `cpool-osx-arm64.zip` |
+| macOS x64 (Intel) | `cpool-osx-x64.zip` |
+| Linux x64 | `cpool-linux-x64.zip` |
+
+**Windows:** Extract the zip, then run `install.ps1` (right-click → Run with PowerShell). Open a new terminal — `cpool` is now on your PATH.
+
+> If PowerShell blocks the script: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+**macOS / Linux:** Extract the zip, then run `bash install.sh`. Open a new terminal — `cpool` is now on your PATH.
+
+To uninstall — Windows: run `uninstall.ps1`; macOS/Linux: run `bash uninstall.sh`.
+
+### Option C — Run from source
+
+```bash
+git clone https://github.com/piers-sinclair/cardpool
+dotnet run --project src/CardPool.Cli -- export
+```
+
+### Sharing with someone without repo access
+
+Build a platform zip and send it (recipient needs no .NET):
+
+```bash
+# Windows
+dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
+
+# macOS (Apple Silicon)
+dotnet publish src/CardPool.Cli -p:PublishProfile=osx-arm64 -o dist/osx-arm64
+
+# Linux
+dotnet publish src/CardPool.Cli -p:PublishProfile=linux-x64 -o dist/linux-x64
+```
+
+---
+
+## Commands
+
+### `cpool export`
+
+Export all card data to Excel (`.xlsx`) and CSV. Output files are written to `./output/` by default.
+
+```bash
+cpool export                              # default: <=25 words, no-materials, no-link, no-pendulum
+cpool export --words 20                   # <=20 words
+cpool export --no-materials false         # include full material text in word count
+cpool export --extra-deck all             # include all Extra Deck types (including Link)
+cpool export --extra-deck none            # main-deck cards only
+cpool export --extra-deck fusion synchro  # Fusion + Synchro only
+cpool export --no-pendulum false          # include Pendulum monsters
+cpool export --words 30 --output ~/ygo    # <=30 words, custom output dir
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--words` | `25` | Word-count threshold — cards with any printing at or below this limit are included |
+| `--no-materials` | `true` | Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column |
+| `--extra-deck` | `fusion synchro xyz` | Extra Deck types to include — valid values: `all`, `none`, `fusion`, `synchro`, `xyz`, `link` (repeatable) |
+| `--no-pendulum` | `true` | Exclude Pendulum monsters from output |
+| `--output` | `./output` | Directory to write output files to |
+
+### `cpool inspect`
+
+Show all errata versions for a single card with word counts, highlighting the shortest and latest versions.
+
+```bash
+cpool inspect "Raiza the Storm Monarch"
+cpool inspect "Dark Magician"
+```
+
+### Global options
+
+```bash
+cpool --help      # show available commands
+cpool --version   # show installed version
+```
+
+---
+
+## Development
+
+### Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
----
-
-## Usage
+### Run from source
 
 ```bash
-# Full export at ≤20 words (default)
 dotnet run --project src/CardPool.Cli -- export
-
-# Change the word-count threshold
 dotnet run --project src/CardPool.Cli -- export --words 25
-dotnet run --project src/CardPool.Cli -- export --words 30
-
-# Strip material requirements from Extra Deck monsters
-dotnet run --project src/CardPool.Cli -- export --no-materials
-dotnet run --project src/CardPool.Cli -- export --no-materials --words 25
-
-# Inspect a single card's errata history
 dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
-
-# Run unit tests
-dotnet test tests/CardPool.Tests --filter "Category!=Integration"
-
-# Run live API regression tests (~5 min)
-dotnet test tests/CardPool.Tests --filter "Category=Integration"
 ```
 
-All outputs go to the `output/` directory (created automatically).
+### Tests
+
+```bash
+dotnet test tests/CardPool.Tests --filter "Category!=Integration"   # unit tests (fast)
+dotnet test tests/CardPool.Tests --filter "Category=Integration"    # live API tests (~5 min)
+dotnet test tests/CardPool.Tests                                    # all tests
+```
 
 ---
 

@@ -77,9 +77,7 @@ exportCommand.SetAction(async parseResult =>
         $"{outputDirectory}/{suffix}.csv",
         wordLimit: wordLimit,
         latestOnly: latestOnly,
-        rowPostprocess: noMaterials
-            ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
-            : null,
+        stripMaterials: noMaterials,
         rowFilter: row => IsTypeIncluded(row.Type, excludeTypes));
 });
 

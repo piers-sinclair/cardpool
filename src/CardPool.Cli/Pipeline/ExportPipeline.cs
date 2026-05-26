@@ -10,7 +10,7 @@ public static class ExportPipeline
         string outputCsv,
         int wordLimit = 20,
         bool latestOnly = false,
-        Func<NormalizedRow, int, NormalizedRow>? rowPostprocess = null,
+        bool stripMaterials = false,
         Func<NormalizedRow, bool>? rowFilter = null)
     {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
@@ -25,7 +25,18 @@ public static class ExportPipeline
                 : new(StringComparer.OrdinalIgnoreCase);
 
         Console.WriteLine("Normalizing...");
-        var rows = BuildRows(allCards, errataMap, wordLimit, rowPostprocess, rowFilter);
+        var rows = new List<NormalizedRow>(allCards.Count);
+        foreach (var card in allCards)
+        {
+            errataMap.TryGetValue(card.Name, out var errata);
+            var row = CardNormalizer.Normalize(card, errata.Shortest, errata.Latest, wordLimit);
+
+            if (stripMaterials)
+                row = MaterialStripper.PostprocessRow(row, wordLimit);
+
+            if (rowFilter is null || rowFilter(row))
+                rows.Add(row);
+        }
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, wordLimit);
@@ -59,13 +70,12 @@ public static class ExportPipeline
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
         var errataMap = new Dictionary<string, (string? Shortest, string? Latest)>(StringComparer.OrdinalIgnoreCase);
-        var semaphore = new SemaphoreSlim(MaxWorkers);
         var processed = 0;
 
-        await Task.WhenAll(candidates.Chunk(BatchSize).Select(async batch =>
-        {
-            await semaphore.WaitAsync();
-            try
+        await Parallel.ForEachAsync(
+            candidates.Chunk(BatchSize),
+            new ParallelOptions { MaxDegreeOfParallelism = MaxWorkers },
+            async (batch, _) =>
             {
                 var result = await yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList());
                 lock (errataMap)
@@ -77,36 +87,9 @@ public static class ExportPipeline
                     if (processed % 500 == 0 || processed == candidates.Count)
                         Console.WriteLine($"  Processed {processed}/{candidates.Count} errata lookups...");
                 }
-            }
-            finally
-            {
-                semaphore.Release();
-            }
-        }));
+            });
 
         Console.WriteLine("Errata fetch complete.");
         return errataMap;
-    }
-
-    private static List<NormalizedRow> BuildRows(
-        List<YgoCard> cards,
-        Dictionary<string, (string? Shortest, string? Latest)> errataMap,
-        int wordLimit,
-        Func<NormalizedRow, int, NormalizedRow>? rowPostprocess,
-        Func<NormalizedRow, bool>? rowFilter)
-    {
-        var rows = new List<NormalizedRow>(cards.Count);
-        foreach (var card in cards)
-        {
-            errataMap.TryGetValue(card.Name, out var errata);
-            var row = CardNormalizer.Normalize(card, errata.Shortest, errata.Latest, wordLimit);
-
-            if (rowPostprocess is not null)
-                row = rowPostprocess(row, wordLimit);
-
-            if (rowFilter is null || rowFilter(row))
-                rows.Add(row);
-        }
-        return rows;
     }
 }

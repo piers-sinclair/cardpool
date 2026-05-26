@@ -2,7 +2,7 @@
 
 > **Disclaimer:** CardPool is an independent fan project and is not affiliated with, endorsed by, or sponsored by Konami Digital Entertainment. Yu-Gi-Oh! is a trademark of Konami. Card text and artwork are the intellectual property of their respective owners.
 >
-> Card data is fetched from [YGOProDeck](https://ygoprodeck.com/), which is available for personal, non-commercial use. Users of this tool are responsible for complying with [YGOProDeck's terms of service](https://ygoprodeck.com/terms-of-service/).
+> Card data is fetched from [YGOProDeck](https://ygoprodeck.com/). Users of this tool are responsible for complying with [YGOProDeck's API usage guidelines](https://ygoprodeck.com/api-guide/).
 
 Card pool analysis tool for trading card games. Fetches card data from game-specific sources, enriches it with errata history, applies word-count rules, and exports to Excel/CSV.
 

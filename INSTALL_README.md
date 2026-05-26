@@ -1,11 +1,38 @@
 # CardPool — Installation
 
-## Install
+## Windows
 
-1. Right-click `install.ps1` and choose **Run with PowerShell** (or run it in a terminal).
-2. Open a **new terminal** — `cpool` is now on your PATH.
+Run the installer (no .NET required):
 
-> If PowerShell blocks the script, run once: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+```powershell
+.\install.ps1
+```
+
+Or right-click `install.ps1` and choose **Run with PowerShell**.
+
+> If PowerShell blocks the script: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+Open a **new terminal** — `cpool` is now on your PATH.
+
+To uninstall: run `.\uninstall.ps1` the same way.
+
+---
+
+## macOS / Linux
+
+Run the installer (no .NET required):
+
+```bash
+bash install.sh
+```
+
+Open a **new terminal** — `cpool` is now on your PATH.
+
+To uninstall:
+
+```bash
+bash uninstall.sh
+```
 
 ---
 
@@ -42,9 +69,3 @@ Output files (`*.xlsx` and `*.csv`) are written to `./output/` (or the directory
 | `--extra-deck` | `fusion synchro xyz` | Extra Deck types included (Link excluded by default) |
 | `--no-pendulum` | `true` | Exclude Pendulum monsters |
 | `--output` | `./output` | Output directory |
-
----
-
-## Uninstall
-
-Right-click `uninstall.ps1` and choose **Run with PowerShell**, or run it in a terminal.

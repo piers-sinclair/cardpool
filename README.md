@@ -34,15 +34,17 @@ Download the latest zip for your platform from the [Releases](https://github.com
 |----------|------|
 | Windows x64 | `cpool-win-x64.zip` |
 | Windows ARM64 | `cpool-win-arm64.zip` |
+| macOS ARM64 (Apple Silicon) | `cpool-osx-arm64.zip` |
+| macOS x64 (Intel) | `cpool-osx-x64.zip` |
 | Linux x64 | `cpool-linux-x64.zip` |
 
-**Windows:** Extract the zip, then right-click `install.ps1` → **Run with PowerShell**. Open a new terminal — `cpool` is now on your PATH.
+**Windows:** Extract the zip, then run `install.ps1` (right-click → Run with PowerShell). Open a new terminal — `cpool` is now on your PATH.
 
 > If PowerShell blocks the script: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
-**Linux:** Extract the zip, then `chmod +x cpool && sudo mv cpool /usr/local/bin/`
+**macOS / Linux:** Extract the zip, then run `bash install.sh`. Open a new terminal — `cpool` is now on your PATH.
 
-To uninstall (Windows): right-click `uninstall.ps1` → **Run with PowerShell**.
+To uninstall — Windows: run `uninstall.ps1`; macOS/Linux: run `bash uninstall.sh`.
 
 ### Option C — Run from source
 
@@ -53,14 +55,18 @@ dotnet run --project src/CardPool.Cli -- export
 
 ### Sharing with someone without repo access
 
-Build a self-contained zip and send it:
+Build a platform zip and send it (recipient needs no .NET):
 
-```powershell
+```bash
+# Windows
 dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
-Compress-Archive -Path dist/win-x64/cpool.exe, install.ps1, uninstall.ps1, INSTALL_README.md -DestinationPath cpool-win-x64.zip
-```
 
-The recipient only needs to unzip and run `install.ps1` — no .NET installation required.
+# macOS (Apple Silicon)
+dotnet publish src/CardPool.Cli -p:PublishProfile=osx-arm64 -o dist/osx-arm64
+
+# Linux
+dotnet publish src/CardPool.Cli -p:PublishProfile=linux-x64 -o dist/linux-x64
+```
 
 ---
 

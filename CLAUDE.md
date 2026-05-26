@@ -97,15 +97,17 @@ The `.nupkg` is produced by `<PackAsTool>true</PackAsTool>` in the csproj. Packa
 
 ### Self-contained executables
 
-Three publish profiles live in `src/CardPool.Cli/Properties/PublishProfiles/`:
+Five publish profiles live in `src/CardPool.Cli/Properties/PublishProfiles/`:
 
 | Profile | Platform |
 |---------|----------|
 | `win-x64.pubxml` | Windows x64 |
 | `win-arm64.pubxml` | Windows ARM64 |
+| `osx-arm64.pubxml` | macOS ARM64 (Apple Silicon) |
+| `osx-x64.pubxml` | macOS x64 (Intel) |
 | `linux-x64.pubxml` | Linux x64 |
 
-```powershell
+```bash
 dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
 ```
 
@@ -113,12 +115,19 @@ All profiles use `PublishSingleFile=true` and `SelfContained=true`. `PublishTrim
 
 ### Sharing without repo access
 
+Windows bundle (recipients run `install.ps1`):
+
 ```powershell
 dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
 Compress-Archive -Path dist/win-x64/cpool.exe, install.ps1, uninstall.ps1, INSTALL_README.md -DestinationPath cpool-win-x64.zip
 ```
 
-Recipients unzip and run `install.ps1` — no .NET installation required.
+macOS/Linux bundle (recipients run `bash install.sh`):
+
+```bash
+dotnet publish src/CardPool.Cli -p:PublishProfile=osx-arm64 -o dist/osx-arm64
+zip -j cpool-osx-arm64.zip dist/osx-arm64/cpool install.sh uninstall.sh INSTALL_README.md
+```
 
 ---
 
@@ -164,6 +173,12 @@ Yugipedia sometimes stores only one section (`[Pendulum Effect]` or `[Monster Ef
 All NuGet packages must be **MIT, Apache 2.0, BSD-2, BSD-3, ISC, or equivalent** (free for commercial closed-source use).
 - **Do not use EPPlus** — v5+ is Polyform Non-Commercial. ClosedXML (MIT) is the Excel library.
 - Before adding a new package, verify its licence and add it with a comment if unusual.
+
+---
+
+## Shell conventions
+
+Always use the **Bash tool** for terminal commands. Only fall back to PowerShell when the operation is genuinely Windows-specific and has no Bash equivalent (e.g. `Compress-Archive`, registry edits). Multi-command chains should use `&&` and POSIX syntax.
 
 ---
 

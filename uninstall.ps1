@@ -9,7 +9,7 @@ if (Test-Path $installDir) {
     Remove-Item -Path $installDir -Recurse -Force
     Write-Host "Removed $installDir"
 } else {
-    Write-Host "Nothing to remove — $installDir does not exist."
+    Write-Host "Nothing to remove - $installDir does not exist."
 }
 
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")

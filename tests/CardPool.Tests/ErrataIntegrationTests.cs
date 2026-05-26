@@ -25,13 +25,11 @@ public sealed class IntegrationData : IAsyncLifetime
         var ygoDeck = new YgoProDeckClient(http);
         var yugipedia = new YugipediaClient(http);
 
-        var cards = new Dictionary<string, YgoCard>(StringComparer.OrdinalIgnoreCase);
-        foreach (var name in AllNames)
-        {
-            var card = await ygoDeck.FetchCardByNameAsync(name);
-            if (card is not null)
-                cards[name] = card;
-        }
+        var allCards = await ygoDeck.FetchAllCardsAsync();
+        var nameSet = new HashSet<string>(AllNames, StringComparer.OrdinalIgnoreCase);
+        var cards = allCards
+            .Where(c => nameSet.Contains(c.Name))
+            .ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
 
         var needsErrata = cards.Values
             .Where(c => CardNormalizer.NeedsErrataLookup(c, 20))

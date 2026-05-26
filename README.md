@@ -1,6 +1,12 @@
-# YgoDb
+# CardPool
 
-Yu-Gi-Oh! card database tool for Edison format play. Fetches ~12,000 cards from [YGOProDeck](https://ygoprodeck.com/), enriches them with errata history from [Yugipedia](https://yugipedia.com/), and exports to Excel/CSV.
+> **Disclaimer:** CardPool is an independent fan project and is not affiliated with, endorsed by, or sponsored by Konami Digital Entertainment. Yu-Gi-Oh! is a trademark of Konami. Card text and artwork are the intellectual property of their respective owners.
+>
+> Card data is fetched from [YGOProDeck](https://ygoprodeck.com/), which is available for personal, non-commercial use. Users of this tool are responsible for complying with [YGOProDeck's terms of service](https://ygoprodeck.com/terms-of-service/).
+
+Card pool analysis tool for trading card games. Fetches card data from game-specific sources, enriches it with errata history, applies word-count rules, and exports to Excel/CSV.
+
+**Current implementation: Yu-Gi-Oh! (Edison format).** The goal is to support multiple TCGs — Yu-Gi-Oh! is the first. Cards are fetched from [YGOProDeck](https://ygoprodeck.com/) and enriched with errata history from [Yugipedia](https://yugipedia.com/).
 
 The core purpose: identify cards whose **shortest known errata version** falls within a word-count threshold (default: ≤20 words), making them eligible under Edison format's word-count rule regardless of current oracle text.
 
@@ -16,24 +22,24 @@ The core purpose: identify cards whose **shortest known errata version** falls w
 
 ```bash
 # Full export at ≤20 words (default)
-dotnet run --project src/YgoDb.Cli -- export
+dotnet run --project src/CardPool.Cli -- export
 
 # Change the word-count threshold
-dotnet run --project src/YgoDb.Cli -- export --words 25
-dotnet run --project src/YgoDb.Cli -- export --words 30
+dotnet run --project src/CardPool.Cli -- export --words 25
+dotnet run --project src/CardPool.Cli -- export --words 30
 
 # Strip material requirements from Extra Deck monsters
-dotnet run --project src/YgoDb.Cli -- export --no-materials
-dotnet run --project src/YgoDb.Cli -- export --no-materials --words 25
+dotnet run --project src/CardPool.Cli -- export --no-materials
+dotnet run --project src/CardPool.Cli -- export --no-materials --words 25
 
 # Inspect a single card's errata history
-dotnet run --project src/YgoDb.Cli -- inspect "Raiza the Storm Monarch"
+dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 
 # Run unit tests
-dotnet test tests/YgoDb.Tests --filter "Category!=Integration"
+dotnet test tests/CardPool.Tests --filter "Category!=Integration"
 
 # Run live API regression tests (~5 min)
-dotnet test tests/YgoDb.Tests --filter "Category=Integration"
+dotnet test tests/CardPool.Tests --filter "Category=Integration"
 ```
 
 All outputs go to the `output/` directory (created automatically).
@@ -132,3 +138,9 @@ The shortest errata is selected by fewest raw words across all errata versions; 
 | CSV output | CsvHelper |
 | HTTP | HttpClient + System.Text.Json |
 | Tests | xUnit + Shouldly + NSubstitute |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).

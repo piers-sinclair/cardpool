@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/YgoDb.Cli/YgoDb.Cli.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/YgoDb.Tests/YgoDb.Tests.csproj" />
-  </Folder>
-</Solution>

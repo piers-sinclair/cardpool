@@ -1,0 +1,12 @@
+global using AngleSharp;
+global using AngleSharp.Dom;
+global using System.CommandLine;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using System.Text.RegularExpressions;
+global using CardPool.Cli.Api;
+global using CardPool.Cli.Export;
+global using CardPool.Cli.Models;
+global using CardPool.Cli.Parsing;
+global using CardPool.Cli.Pipeline;
+global using CardPool.Cli.WordCount;

@@ -51,19 +51,27 @@ global.json               ← pins .NET SDK version to 10.x
 ## CLI commands
 
 ```bash
-# Export (single command with options replaces 6 Python entry scripts)
-dotnet run --project src/CardPool.Cli -- export                         # full, ≤20 words
-dotnet run --project src/CardPool.Cli -- export --words 25              # full, ≤25 words
-dotnet run --project src/CardPool.Cli -- export --words 30              # full, ≤30 words
-dotnet run --project src/CardPool.Cli -- export --no-materials          # strip Extra Deck, ≤20w; keeps stripped materials in a separate column
-dotnet run --project src/CardPool.Cli -- export --no-materials --words 25
+# If installed as a global tool or self-contained exe:
+cpool export
+cpool export --words 25
+cpool inspect "Raiza the Storm Monarch"
+
+# Run from source (development):
+dotnet run --project src/CardPool.Cli -- export                         # default: ≤25 words, no-materials, no-link, no-pendulum
+dotnet run --project src/CardPool.Cli -- export --words 25
+dotnet run --project src/CardPool.Cli -- export --words 30
+dotnet run --project src/CardPool.Cli -- export --no-materials false     # include full material text
+dotnet run --project src/CardPool.Cli -- export --no-pendulum false      # include Pendulum monsters
 
 # --extra-deck: which Extra Deck types to include (all|none|fusion|synchro|xyz|link, repeatable)
 dotnet run --project src/CardPool.Cli -- export --extra-deck none        # main deck cards only
-dotnet run --project src/CardPool.Cli -- export --extra-deck fusion synchro   # fusion + synchro only
-dotnet run --project src/CardPool.Cli -- export --no-materials --extra-deck synchro xyz
+dotnet run --project src/CardPool.Cli -- export --extra-deck fusion synchro
+dotnet run --project src/CardPool.Cli -- export --extra-deck all         # include Link too
 
-# Inspect a single card (replaces inspect_card.py)
+# --output: custom output directory
+dotnet run --project src/CardPool.Cli -- export --output ~/ygo
+
+# Inspect a single card
 dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 
 # Tests
@@ -71,6 +79,46 @@ dotnet test tests/CardPool.Tests --filter "Category!=Integration"       # unit t
 dotnet test tests/CardPool.Tests --filter "Category=Integration"        # live API tests (~5 min)
 dotnet test tests/CardPool.Tests                                        # all tests
 ```
+
+---
+
+## Distribution
+
+The CLI is packaged as both a **.NET Global Tool** and a **self-contained single-file executable**.
+
+### Global Tool
+
+```bash
+dotnet pack src/CardPool.Cli -c Release -o dist/
+dotnet tool install -g CardPool --add-source dist/
+```
+
+The `.nupkg` is produced by `<PackAsTool>true</PackAsTool>` in the csproj. PackageId is `CardPool`, command is `cpool`.
+
+### Self-contained executables
+
+Three publish profiles live in `src/CardPool.Cli/Properties/PublishProfiles/`:
+
+| Profile | Platform |
+|---------|----------|
+| `win-x64.pubxml` | Windows x64 |
+| `win-arm64.pubxml` | Windows ARM64 |
+| `linux-x64.pubxml` | Linux x64 |
+
+```powershell
+dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
+```
+
+All profiles use `PublishSingleFile=true` and `SelfContained=true`. `PublishTrimmed` is intentionally omitted — AngleSharp, ClosedXML, and CsvHelper use reflection and are not trim-safe.
+
+### Sharing without repo access
+
+```powershell
+dotnet publish src/CardPool.Cli -p:PublishProfile=win-x64 -o dist/win-x64
+Compress-Archive -Path dist/win-x64/cpool.exe, install.ps1, uninstall.ps1, INSTALL_README.md -DestinationPath cpool-win-x64.zip
+```
+
+Recipients unzip and run `install.ps1` — no .NET installation required.
 
 ---
 

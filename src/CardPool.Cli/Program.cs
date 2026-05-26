@@ -1,4 +1,4 @@
-var rootCommand = new RootCommand("CardPool — Yu-Gi-Oh! card database export tool");
+var rootCommand = new RootCommand("CardPool — trading card game pool analysis and export tool");
 
 var exportCommand = new Command("export", "Export card data to Excel/CSV");
 

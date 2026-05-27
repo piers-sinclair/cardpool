@@ -18,8 +18,9 @@ public class NormalizedRow
     public string? Materials { get; set; }
     public string ShortestErrata { get; set; } = "";
     public string LatestErrata { get; set; } = "";
-    public int WordCount { get; set; }
-    public bool IsEligible { get; set; }
+    public int WordLimit { get; set; }
+    public int WordCount => WordCounter.CountEffectiveWords(ShortestErrata, Type);
+    public bool IsEligible => WordCount <= WordLimit;
     public string? SetName { get; set; }
     public string? SetCode { get; set; }
     public string? SetRarity { get; set; }

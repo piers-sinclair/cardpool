@@ -74,10 +74,10 @@ public class MaterialStripperTests
             Desc = "1 Tuner + 1 non-Tuner\nOnce per turn, you can draw 1 card.",
             ShortestErrata = "1 Tuner + 1 non-Tuner\nOnce per turn, you can draw 1 card.",
             LatestErrata = "1 Tuner + 1 non-Tuner\nOnce per turn, you can draw 1 card.",
-            WordCount = 99
+            WordLimit = 20
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Desc.ShouldBe("Once per turn, you can draw 1 card.");
         result.ShortestErrata.ShouldBe("Once per turn, you can draw 1 card.");
@@ -94,10 +94,9 @@ public class MaterialStripperTests
             Desc = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
             ShortestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
             LatestErrata = "1 Tuner + 1 non-Tuner If this card attacks a Defense Position monster, inflict piercing battle damage.",
-            WordCount = 99
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
     }
@@ -111,10 +110,9 @@ public class MaterialStripperTests
             Desc = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
             ShortestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
             LatestErrata = "\"Elemental HERO\" monster + 1 FIRE monster Must be Fusion Summoned. When this card destroys an opponent's monster by battle: Inflict damage equal to that monster's original ATK.",
-            WordCount = 99
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Materials.ShouldBe("\"Elemental HERO\" monster + 1 FIRE monster");
     }
@@ -128,10 +126,9 @@ public class MaterialStripperTests
             Desc = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
             ShortestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
             LatestErrata = "2 Level 4 monsters Once per turn: You can detach 1 material from this card; draw 1 card.",
-            WordCount = 99
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Materials.ShouldBe("2 Level 4 monsters");
     }
@@ -146,13 +143,13 @@ public class MaterialStripperTests
             Desc = original,
             ShortestErrata = original,
             LatestErrata = original,
-            WordCount = 5
+            WordLimit = 20
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
         result.Desc.ShouldBe(original);
         result.Materials.ShouldBeNull();
-        result.WordCount.ShouldBe(5);
+        result.WordCount.ShouldBe(WordCounter.CountEffectiveWords(original, "Spell Card"));
     }
 
     [Fact]
@@ -165,10 +162,9 @@ public class MaterialStripperTests
             Desc = original,
             ShortestErrata = original,
             LatestErrata = original,
-            WordCount = 6
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
         result.Desc.ShouldBe(original);
     }
 
@@ -182,10 +178,10 @@ public class MaterialStripperTests
             Desc = formula,
             ShortestErrata = formula,
             LatestErrata = formula,
-            WordCount = 99
+            WordLimit = 20
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Desc.ShouldBe(string.Empty);
         result.WordCount.ShouldBe(0);
@@ -202,10 +198,10 @@ public class MaterialStripperTests
             Desc = formula,
             ShortestErrata = formula,
             LatestErrata = formula,
-            WordCount = 99
+            WordLimit = 20
         };
 
-        var result = MaterialStripper.PostprocessRow(row, 20);
+        var result = MaterialStripper.PostprocessRow(row);
 
         result.Desc.ShouldBe(string.Empty);
         result.WordCount.ShouldBe(0);

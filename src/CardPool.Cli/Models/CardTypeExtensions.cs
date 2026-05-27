@@ -10,6 +10,10 @@ internal static class CardTypeExtensions
     internal static bool IsPendulumType(this string cardType) =>
         cardType.ContainsIgnoreCase("Pendulum");
 
+    internal static bool IsPendulumNormalType(this string cardType) =>
+        cardType.ContainsIgnoreCase("Pendulum")
+        && cardType.ContainsIgnoreCase("Normal");
+
     internal static bool IsPendulumEffectType(this string cardType) =>
         cardType.ContainsIgnoreCase("Pendulum")
         && !cardType.ContainsIgnoreCase("Normal");

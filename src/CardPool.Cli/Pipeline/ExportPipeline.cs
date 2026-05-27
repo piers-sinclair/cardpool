@@ -47,8 +47,8 @@ public static class ExportPipeline
 
     private static NormalizedRow NormalizeCard(YgoCard card, CardErrata errata, int wordLimit, bool stripMaterials)
     {
-        var row = CardNormalizer.Normalize(card, errata.Shortest, errata.Latest, wordLimit);
-        return stripMaterials ? MaterialStripper.PostprocessRow(row, wordLimit) : row;
+        var row = CardNormalizer.Normalize(card, errata, wordLimit);
+        return stripMaterials ? MaterialStripper.PostprocessRow(row) : row;
     }
 
     private static async Task<List<YgoCard>> FetchPlayableCardsAsync(YgoProDeckClient ygoDeck)

@@ -12,12 +12,11 @@ public class CsvExporterTests
         Level = 4,
         Atk = 1800,
         Def = 0,
-        WordCount = 10,
         ShortestErrata = "shortest text",
         LatestErrata = "latest text",
         Desc = "desc text",
         Materials = materials,
-        IsEligible = true,
+        WordLimit = 20,
     };
 
     private static (string[] Header, string[] FirstRow) ExportAndParse(List<NormalizedRow> rows)

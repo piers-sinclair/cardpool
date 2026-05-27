@@ -25,7 +25,7 @@ public static class ExportPipeline
 
         Console.WriteLine("Normalizing...");
         var rows = allCards
-            .Select(card => NormalizeCard(card, errataMap.GetValueOrDefault(card.Name), wordLimit, stripMaterials))
+            .Select(card => BuildRow(card, errataMap.GetValueOrDefault(card.Name), wordLimit, stripMaterials))
             .Where(row => IsTypeIncluded(row.Type, excludeTypes))
             .ToList();
 
@@ -45,7 +45,7 @@ public static class ExportPipeline
         || excludeTypes.ContainsIgnoreCase("none")
         || excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
 
-    private static NormalizedRow NormalizeCard(YgoCard card, CardErrata errata, int wordLimit, bool stripMaterials)
+    private static NormalizedRow BuildRow(YgoCard card, CardErrata errata, int wordLimit, bool stripMaterials)
     {
         var row = CardNormalizer.Normalize(card, errata, wordLimit);
         return stripMaterials ? MaterialStripper.PostprocessRow(row) : row;

@@ -78,13 +78,8 @@ exportCommand.SetAction(async parseResult =>
         wordLimit: wordLimit,
         latestOnly: latestOnly,
         stripMaterials: noMaterials,
-        rowFilter: row => IsTypeIncluded(row.Type, excludeTypes));
+        excludeTypes: excludeTypes);
 });
-
-static bool IsTypeIncluded(string cardType, string[] excludeTypes) =>
-    excludeTypes.Length == 0
-    || excludeTypes.ContainsIgnoreCase("none")
-    || excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
 
 rootCommand.Add(exportCommand);
 

@@ -19,19 +19,19 @@ public sealed class YugipediaClient : IDisposable
         _http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
     }
 
-    public async Task<Dictionary<string, (string? Shortest, string? Latest)>> FetchErrataAsync(
+    public async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
         IReadOnlyList<string> cardNames)
     {
         var titles = string.Join("|", cardNames.Select(n => $"{ErrataPagePrefix}{n}"));
         var url = $"{ApiUrl}?action=query&prop=revisions&rvprop=content&titles={Uri.EscapeDataString(titles)}&format=json";
 
         var json = await ThrottledGetWithRetryAsync(url);
-        var result = new Dictionary<string, (string?, string?)>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, CardErrata>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
 
         var pages = json?["query"]?["pages"]?.AsObject();
         if (pages is null)
         {
-            foreach (var n in cardNames) result[n] = (null, null);
+            foreach (var n in cardNames) result[n] = new(null, null);
             return result;
         }
 
@@ -55,16 +55,9 @@ public sealed class YugipediaClient : IDisposable
 
         foreach (var name in cardNames)
         {
-            if (pageMap.TryGetValue(name, out var lores))
-            {
-                var shortest = lores.MinBy(WordCounter.CountWords);
-                var latest = lores[^1];
-                result[name] = (shortest, latest);
-            }
-            else
-            {
-                result[name] = (null, null);
-            }
+            result[name] = pageMap.TryGetValue(name, out var lores)
+                ? new(lores.MinBy(WordCounter.CountWords), lores[^1])
+                : new(null, null);
         }
 
         return result;

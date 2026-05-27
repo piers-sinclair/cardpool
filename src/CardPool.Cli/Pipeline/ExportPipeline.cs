@@ -19,7 +19,7 @@ public static class ExportPipeline
 
         var allCards = await FetchPlayableCardsAsync(ygoDeck);
 
-        Dictionary<string, (string? Shortest, string? Latest)> errataMap =
+        Dictionary<string, CardErrata> errataMap =
             NeedsErrataFetch(latestOnly, wordLimit)
                 ? await FetchErrataAsync(yugipedia, allCards, wordLimit)
                 : new(StringComparer.OrdinalIgnoreCase);
@@ -59,7 +59,7 @@ public static class ExportPipeline
         return cards;
     }
 
-    private static async Task<Dictionary<string, (string? Shortest, string? Latest)>> FetchErrataAsync(
+    private static async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
         YugipediaClient yugipedia,
         List<YgoCard> cards,
         int wordLimit)
@@ -69,7 +69,7 @@ public static class ExportPipeline
             .ToList();
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
-        var errataMap = new Dictionary<string, (string? Shortest, string? Latest)>(StringComparer.OrdinalIgnoreCase);
+        var errataMap = new Dictionary<string, CardErrata>(StringComparer.OrdinalIgnoreCase);
         var processed = 0;
 
         await Parallel.ForEachAsync(

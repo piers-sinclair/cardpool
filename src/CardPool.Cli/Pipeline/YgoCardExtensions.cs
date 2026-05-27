@@ -12,8 +12,8 @@ internal static partial class YgoCardExtensions
 
     internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata errata)
     {
-        var resolvedShortest = string.IsNullOrEmpty(errata.Shortest) ? card.Desc : errata.Shortest;
-        var resolvedLatest = string.IsNullOrEmpty(errata.Latest) ? card.Desc : errata.Latest;
+        var resolvedShortest = errata.Shortest ?? card.Desc;
+        var resolvedLatest = errata.Latest ?? card.Desc;
 
         if (card.Type.IsPendulumEffectType() && errata.Shortest is not null)
         {

@@ -1,6 +1,6 @@
 namespace CardPool.Tests;
 
-public class CsvExporterTests
+public class CardPoolCsvExporterTests
 {
     private static NormalizedRow MakeRow(string? materials = null) => new()
     {
@@ -24,7 +24,7 @@ public class CsvExporterTests
         var path = Path.GetTempFileName();
         try
         {
-            CsvExporter.Export(rows, path);
+            CardPoolCsvExporter.Export(rows, path);
             var lines = File.ReadAllLines(path);
             return (lines[0].Split(','), lines.Length > 1 ? lines[1].Split(',') : []);
         }

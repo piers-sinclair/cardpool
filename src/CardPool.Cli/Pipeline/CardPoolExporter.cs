@@ -51,14 +51,15 @@ public class CardPoolExporter
         var prefix = BuildPrefix();
         var exportBase = Path.Combine(runDir, $"{prefix}_export");
 
-        ExcelExporter.Export(rows, exportBase + ".xlsx", _wordLimit);
-        CsvExporter.Export(rows, exportBase + ".csv");
+        CardPoolExcelExporter.Export(rows, exportBase + ".xlsx", _wordLimit);
+        CardPoolCsvExporter.Export(rows, exportBase + ".csv");
 
         if (_since is not null)
         {
-            var rnPath = Path.Combine(runDir, $"{prefix}_release_notes.xlsx");
-            ReleaseNotesExporter.Export(rows, _since.Value, rnPath);
-            Console.WriteLine($"Release notes → {rnPath}");
+            var rnBase = Path.Combine(runDir, $"{prefix}_release_notes");
+            ReleaseNotesExcelExporter.Export(rows, _since.Value, rnBase + ".xlsx");
+            ReleaseNotesCsvExporter.Export(rows, _since.Value, rnBase + ".csv");
+            Console.WriteLine($"Release notes → {rnBase}.xlsx / .csv");
         }
 
         var eligible = rows.Count(r => r.IsEligible);

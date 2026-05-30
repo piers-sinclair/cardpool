@@ -1,6 +1,6 @@
 namespace CardPool.Tests;
 
-public class ReleaseNotesExporterTests
+public class ReleaseNotesExcelExporterTests
 {
     private static NormalizedRow MakeRow(int id, DateOnly? eligibleSince, int wordLimit = 25) => new()
     {
@@ -18,7 +18,7 @@ public class ReleaseNotesExporterTests
         var path = Path.GetTempFileName() + ".xlsx";
         try
         {
-            ReleaseNotesExporter.Export(rows, since, path);
+            ReleaseNotesExcelExporter.Export(rows, since, path);
             return new XLWorkbook(path);
         }
         finally

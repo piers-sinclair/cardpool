@@ -1,5 +1,3 @@
-using ClosedXML.Excel;
-
 namespace CardPool.Tests;
 
 public class ReleaseNotesExporterTests

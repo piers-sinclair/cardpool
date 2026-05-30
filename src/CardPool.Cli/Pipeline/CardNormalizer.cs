@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace CardPool.Cli.Pipeline;
 
 public static class CardNormalizer

@@ -1,5 +1,3 @@
-using ClosedXML.Excel;
-
 namespace CardPool.Cli.Export;
 
 public static class ExcelExporter

@@ -1,3 +1,4 @@
+global using ClosedXML.Excel;
 global using CardPool.Cli.Api;
 global using CardPool.Cli.Export;
 global using CardPool.Cli.Models;

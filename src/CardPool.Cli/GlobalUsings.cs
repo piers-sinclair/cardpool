@@ -1,6 +1,10 @@
 global using AngleSharp;
 global using AngleSharp.Dom;
+global using ClosedXML.Excel;
+global using CsvHelper;
+global using CsvHelper.Configuration;
 global using System.CommandLine;
+global using System.Globalization;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using System.Text.RegularExpressions;

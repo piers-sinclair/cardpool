@@ -106,6 +106,16 @@ public class CardNormalizerTests
     }
 
     [Fact]
+    public void Normalize_NoErrataPageNullTcgDateWithEarliestSetDate_EligibleSinceFromSetDate()
+    {
+        var card = MakeCard("Normal Monster", "Flavour text.");
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20, earliestSetDate: new DateOnly(2002, 3, 8));
+
+        row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
+    }
+
+    [Fact]
     public void Normalize_ErrataFirstLoreUnderLimit_EligibleSinceFromFirstLore()
     {
         var card = MakeCard("Effect Monster", string.Join(" ", Enumerable.Repeat("word", 30)), tcgDate: "2000-01-01");
@@ -155,5 +165,45 @@ public class CardNormalizerTests
         var row = CardNormalizer.Normalize(card, errata, wordLimit: 20);
 
         row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
+    }
+
+    [Fact]
+    public void Normalize_PendulumEffectMalformedShortestLoreValidAlternativeExists_UsesShortestValidLore()
+    {
+        var desc = "[ Pendulum Effect ] \npend a b c d\n\n[ Monster Effect ] \nmon e f g h";
+        var card = MakeCard("Pendulum Effect Monster", desc);
+        const string malformed = "Pendulum Effect: pend a b c d";
+        const string valid = "[Pendulum Effect] pend a b c d [Monster Effect] mon e f g h";
+
+        var errata = new CardErrata(malformed, valid, [
+            new ErrataLore(malformed, null),
+            new ErrataLore(valid, null)
+        ]);
+
+        var row = CardNormalizer.Normalize(card, errata, wordLimit: 20);
+
+        row.ShortestErrata.ShouldBe(valid);
+        row.WordCount.ShouldBe(10);
+    }
+
+    [Fact]
+    public void Normalize_PendulumEffectMalformedFirstLoreAppearsEligible_EligibleSinceIgnoresMalformed()
+    {
+        var pend = string.Join(" ", Enumerable.Repeat("p", 15));
+        var mons = string.Join(" ", Enumerable.Repeat("m", 15));
+        var desc = $"[Pendulum Effect] {pend} [Monster Effect] {mons}";
+        var card = MakeCard("Pendulum Effect Monster", desc, tcgDate: "2000-01-01");
+
+        const string malformed = "Monster Effect: a b c d e";
+        var valid = $"[Pendulum Effect] {pend} [Monster Effect] {mons}";
+        var errata = new CardErrata(malformed, valid, [
+            new ErrataLore(malformed, "2005-06-15"),
+            new ErrataLore(valid, "2020-01-01")
+        ]);
+
+        var row = CardNormalizer.Normalize(card, errata, wordLimit: 20);
+
+        row.IsEligible.ShouldBeFalse();
+        row.EligibleSince.ShouldBeNull();
     }
 }

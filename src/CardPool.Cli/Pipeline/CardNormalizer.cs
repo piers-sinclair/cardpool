@@ -16,7 +16,8 @@ public static class CardNormalizer
         YgoCard card,
         CardErrata? errata,
         int wordLimit,
-        bool stripMaterials = false)
+        bool stripMaterials = false,
+        DateOnly? earliestSetDate = null)
     {
         var resolved = card.GetCardErrata(errata);
 
@@ -39,25 +40,28 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
-            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials),
+            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials, earliestSetDate),
             WordLimit = wordLimit,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
     }
 
-    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials)
+    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials, DateOnly? earliestSetDate)
     {
+        var tcgDate = ParseDate(card.TcgDate) ?? earliestSetDate;
+
         if (errata is null)
-            return ParseDate(card.TcgDate);
+            return tcgDate;
 
         var firstEligibleLore = errata.AllLores
+            .Where(l => YgoCardExtensions.IsWellFormedLore(l.Text, card.Type))
             .FirstOrDefault(l => CountWords(l.Text, card.Type, stripMaterials) <= wordLimit);
 
         if (firstEligibleLore is not null)
-            return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
+            return ParseDate(firstEligibleLore.Date) ?? tcgDate;
 
         return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
-            ? ParseDate(card.TcgDate)
+            ? tcgDate
             : null;
     }
 

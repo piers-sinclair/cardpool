@@ -12,6 +12,7 @@ public class CardPoolExporter
     private readonly bool _stripMaterials;
     private readonly string[]? _excludeTypes;
     private readonly DateOnly? _since;
+    private IReadOnlyDictionary<string, string> _setDates = new Dictionary<string, string>();
 
     public CardPoolExporter(
         YgoProDeckClient ygoDeck,
@@ -33,7 +34,12 @@ public class CardPoolExporter
 
     public async Task ExportAsync(string outputDirectory)
     {
-        var allCards = await FetchPlayableCardsAsync();
+        Console.WriteLine("Fetching cards and set dates from YGOProDeck...");
+        var cardsTask = FetchPlayableCardsAsync();
+        var setDatesTask = _ygoDeck.FetchSetDatesAsync();
+        await Task.WhenAll(cardsTask, setDatesTask);
+        _setDates = await setDatesTask;
+        var allCards = await cardsTask;
 
         var rows = (NeedsErrataFetch()
             ? await BuildShortestErrataRowsAsync(allCards)
@@ -84,12 +90,23 @@ public class CardPoolExporter
 
     private async Task<List<YgoCard>> FetchPlayableCardsAsync()
     {
-        Console.WriteLine("Fetching cards from YGOProDeck...");
         var cards = (await _ygoDeck.FetchAllCardsAsync())
             .Where(c => !c.Type.IsToken() && !c.Type.IsSkillCard())
+            .Where(c => c.IsTcgLegal)
             .ToList();
         Console.WriteLine($"Fetched {cards.Count} cards.");
         return cards;
+    }
+
+    private static DateOnly? ResolveEarliestSetDate(YgoCard card, IReadOnlyDictionary<string, string> setDates)
+    {
+        if (card.CardSets is null) return null;
+        return card.CardSets
+            .Select(s => setDates.GetValueOrDefault(s.SetName))
+            .Select(d => DateOnly.TryParse(d, CultureInfo.InvariantCulture, out var date) ? date : (DateOnly?)null)
+            .OfType<DateOnly>()
+            .Order()
+            .FirstOrDefault();
     }
 
     private async Task<List<NormalizedRow>> BuildShortestErrataRowsAsync(List<YgoCard> cards)
@@ -118,9 +135,6 @@ public class CardPoolExporter
             .ToList();
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
-        Console.WriteLine("Fetching set dates from YGOProDeck...");
-        var setDates = await _ygoDeck.FetchSetDatesAsync();
-
         var errataMap = new Dictionary<string, CardErrata>(StringComparer.OrdinalIgnoreCase);
         var processed = 0;
 
@@ -134,7 +148,7 @@ public class CardPoolExporter
 
         async ValueTask ProcessBatchAsync(YgoCard[] batch, CancellationToken _)
         {
-            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList(), setDates);
+            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList(), _setDates);
             int currentProcessed;
             lock (errataMap)
             {
@@ -149,7 +163,8 @@ public class CardPoolExporter
 
     private NormalizedRow BuildRow(YgoCard card, CardErrata? errata)
     {
-        var row = CardNormalizer.Normalize(card, errata, _wordLimit, _stripMaterials);
+        var earliestSetDate = ResolveEarliestSetDate(card, _setDates);
+        var row = CardNormalizer.Normalize(card, errata, _wordLimit, _stripMaterials, earliestSetDate);
         return _stripMaterials ? MaterialStripper.PostprocessRow(row) : row;
     }
 

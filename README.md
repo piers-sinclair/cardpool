@@ -76,6 +76,8 @@ dotnet publish src/CardPool.Cli -p:PublishProfile=linux-x64 -o dist/linux-x64
 
 Export all card data to Excel (`.xlsx`) and CSV. Output files are written to `./output/<date>/` by default.
 
+> Only TCG-legal cards are included — cards with no known TCG release date (OCG-only, digital-only, etc.) are excluded automatically.
+
 ```bash
 cpool export                                         # default: <=25 words, strip-materials, exclude pendulum link
 cpool export --words 20                              # <=20 words

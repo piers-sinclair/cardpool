@@ -134,6 +134,19 @@ public class CardNormalizerTests
     }
 
     [Fact]
+    public void Normalize_SynchroErrataFirstLoreEffectUnderLimitWithStripMaterials_EligibleSinceFromFirstLore()
+    {
+        var card = MakeCard("Synchro Monster", "1 Tuner + 1 non-Tuner\nOriginal long effect " + string.Join(" ", Enumerable.Repeat("word", 20)), tcgDate: "2000-01-01");
+        var shortEffect = "When this card is Synchro Summoned: Destroy up to 3 cards.";
+        var lore0 = "1 Tuner + 1 non-Tuner " + shortEffect;
+        var errata = new CardErrata(lore0, lore0, [new ErrataLore(lore0, "2009-11-05")]);
+
+        var row = CardNormalizer.Normalize(card, errata, wordLimit: 20, stripMaterials: true);
+
+        row.EligibleSince.ShouldBe(new DateOnly(2009, 11, 5));
+    }
+
+    [Fact]
     public void Normalize_ErrataFirstLoreUnderLimitNoDate_EligibleSinceEqualsTcgDate()
     {
         var card = MakeCard("Effect Monster", string.Join(" ", Enumerable.Repeat("word", 30)), tcgDate: "2002-03-08");

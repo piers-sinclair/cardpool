@@ -117,7 +117,7 @@ public class CardPoolExporter
 
     private NormalizedRow BuildRow(YgoCard card, CardErrata? errata)
     {
-        var row = CardNormalizer.Normalize(card, errata, _wordLimit);
+        var row = CardNormalizer.Normalize(card, errata, _wordLimit, _stripMaterials);
         return _stripMaterials ? MaterialStripper.PostprocessRow(row) : row;
     }
 

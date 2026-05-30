@@ -15,7 +15,8 @@ public static class CardNormalizer
     public static NormalizedRow Normalize(
         YgoCard card,
         CardErrata? errata,
-        int wordLimit)
+        int wordLimit,
+        bool stripMaterials = false)
     {
         var resolved = card.GetCardErrata(errata);
 
@@ -38,27 +39,33 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
-            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit),
+            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials),
             WordLimit = wordLimit,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
     }
 
-    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit)
+    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials)
     {
         if (errata is null)
             return ParseDate(card.TcgDate);
 
         var firstEligibleLore = errata.AllLores
-            .FirstOrDefault(l => WordCounter.CountEffectiveWords(l.Text, card.Type) <= wordLimit);
+            .FirstOrDefault(l => CountWords(l.Text, card.Type, stripMaterials) <= wordLimit);
 
         if (firstEligibleLore is not null)
             return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
 
-        if (WordCounter.CountEffectiveWords(resolved.Shortest, card.Type) <= wordLimit)
+        if (CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit)
             return ParseDate(card.TcgDate);
 
         return null;
+    }
+
+    private static int CountWords(string text, string type, bool stripMaterials)
+    {
+        var effective = stripMaterials ? MaterialStripper.StripMaterialLine(text) : text;
+        return WordCounter.CountEffectiveWords(effective, type);
     }
 
     private static DateOnly? ParseDate(string? raw)

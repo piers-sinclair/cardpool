@@ -10,24 +10,30 @@ internal static partial class YgoCardExtensions
     [GeneratedRegex(@"\[\s*Monster Effect\s*\]|Monster Effect\s*:", RegexOptions.IgnoreCase)]
     private static partial Regex HasMonsterMarkerRegex();
 
+    internal static bool IsWellFormedLore(string text, string cardType) =>
+        !cardType.IsPendulumEffectType()
+        || (HasPendulumMarkerRegex().IsMatch(text) && HasMonsterMarkerRegex().IsMatch(text));
+
     internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata? errata)
     {
         if (errata is null)
             return new ResolvedErrata(card.Desc, card.Desc);
 
-        var resolvedShortest = errata.Shortest;
+        if (!card.Type.IsPendulumEffectType())
+            return new ResolvedErrata(errata.Shortest, errata.Latest);
 
-        if (card.Type.IsPendulumEffectType())
+        var validLores = errata.AllLores
+            .Where(l => IsWellFormedLore(l.Text, card.Type))
+            .ToList();
+
+        if (validLores.Count == 0)
         {
-            var hasPend = HasPendulumMarkerRegex().IsMatch(resolvedShortest);
-            var hasMons = HasMonsterMarkerRegex().IsMatch(resolvedShortest);
-            if (hasPend != hasMons)
-            {
-                Console.WriteLine($"Warning: malformed Yugipedia pendulum errata for '{card.Name}' — falling back to YGOProDeck description.");
-                resolvedShortest = card.Desc;
-            }
+            Console.WriteLine($"Warning: malformed Yugipedia pendulum errata for '{card.Name}' — falling back to YGOProDeck description.");
+            return new ResolvedErrata(card.Desc, card.Desc);
         }
 
-        return new ResolvedErrata(resolvedShortest, errata.Latest);
+        return new ResolvedErrata(
+            validLores.MinBy(l => WordCounter.CountWords(l.Text))!.Text,
+            validLores[^1].Text);
     }
 }

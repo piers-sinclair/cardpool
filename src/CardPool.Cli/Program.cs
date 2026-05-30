@@ -1,6 +1,5 @@
 const string ExcludeAll = "none";
 const string ErrataModeLatest = "latest";
-const int DefaultWords = 25;
 const int UnlimitedWords = -1;
 
 var rootCommand = new RootCommand(
@@ -24,7 +23,7 @@ var exportCommand = new Command("export",
 var wordsOption = new Option<int>("--words")
 {
     Description = "Word-count threshold — cards with any printing at or below this limit are included (default: 25, use -1 for no limit)",
-    DefaultValueFactory = _ => 25
+    DefaultValueFactory = _ => AppConstants.DefaultWordLimit
 };
 
 var stripMaterialsOption = new Option<bool>("--strip-materials")
@@ -76,16 +75,7 @@ exportCommand.SetAction(async parseResult =>
     var latestOnly = errataMode.EqualsIgnoreCase(ErrataModeLatest);
     var wordLimit = words == UnlimitedWords ? int.MaxValue : words;
     var excludeAll = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase(ExcludeAll);
-
-    var typesSuffix = excludeAll
-        ? "_all_types"
-        : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
-    var errataSuffix = latestOnly ? "_latest" : "";
-    var materialsPart = stripMaterials ? "no_materials" : "with_materials";
-    var wordsPart = words == DefaultWords ? "" : words == UnlimitedWords ? "_all_words" : $"_{words}words";
-    var basePrefix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}";
-    var today = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
-    var exportSuffix = $"{basePrefix}_export_{today}";
+    DateOnly? sinceDate = DateOnly.TryParse(since, CultureInfo.InvariantCulture, out var d) ? d : null;
 
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
     var exporter = new CardPoolExporter(
@@ -94,18 +84,11 @@ exportCommand.SetAction(async parseResult =>
         wordLimit,
         latestOnly,
         stripMaterials,
-        excludeTypes: excludeAll ? null : excludeTypes);
+        excludeTypes: excludeAll ? null : excludeTypes,
+        since: sinceDate);
 
     Directory.CreateDirectory(outputDirectory);
-    var sinceDate = since is not null && DateOnly.TryParse(since, CultureInfo.InvariantCulture, out var d) ? d : (DateOnly?)null;
-    var releaseNotesPath = sinceDate is not null
-        ? Path.Combine(outputDirectory, $"{basePrefix}_release_notes_{today}.xlsx")
-        : null;
-    await exporter.ExportAsync(
-        $"{outputDirectory}/{exportSuffix}.xlsx",
-        $"{outputDirectory}/{exportSuffix}.csv",
-        sinceDate,
-        releaseNotesPath);
+    await exporter.ExportAsync(outputDirectory);
 });
 
 rootCommand.Add(exportCommand);

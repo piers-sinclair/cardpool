@@ -23,7 +23,7 @@ public static class ReleaseNotesExporter
             .ToList();
 
         using var wb = new XLWorkbook();
-        AddSheet(wb, $"Eligible Since {since.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", newlyEligible);
+        AddSheet(wb, $"Eligible Since {since.ToString(AppConstants.IsoDateFormat, CultureInfo.InvariantCulture)}", newlyEligible);
         wb.SaveAs(path);
     }
 
@@ -31,22 +31,16 @@ public static class ReleaseNotesExporter
     {
         var ws = wb.Worksheets.Add(sheetName);
 
-        WriteHeaders(ws);
+        WorksheetFormatter.WriteHeaders(ws, Columns);
         WriteDataRows(ws, rows);
 
         ws.RangeUsed()?.SetAutoFilter();
         ApplyColumnWidths(ws);
-        StyleHeaderRow(ws);
+        WorksheetFormatter.StyleHeaderRow(ws, Columns.Length);
         ws.SheetView.Freeze(1, 1);
 
         if (rows.Count > 0)
             ApplyDataFormatting(ws, rows.Count);
-    }
-
-    private static void WriteHeaders(IXLWorksheet ws)
-    {
-        for (var i = 0; i < Columns.Length; i++)
-            ws.Cell(1, i + 1).Value = Columns[i];
     }
 
     private static void WriteDataRows(IXLWorksheet ws, List<NormalizedRow> rows)
@@ -56,7 +50,7 @@ public static class ReleaseNotesExporter
             var r = rows[rowIdx];
             object?[] values = [r.Name, r.Type, r.WordCount, r.ShortestErrata, r.EligibleSinceText, r.IsEligible];
             for (var colIdx = 0; colIdx < values.Length; colIdx++)
-                SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
+                WorksheetFormatter.SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
         }
     }
 
@@ -64,17 +58,6 @@ public static class ReleaseNotesExporter
     {
         for (var i = 0; i < Columns.Length; i++)
             ws.Column(i + 1).Width = ColumnWidths.TryGetValue(Columns[i], out var w) ? w : 15;
-    }
-
-    private static void StyleHeaderRow(IXLWorksheet ws)
-    {
-        var headerRange = ws.Range(1, 1, 1, Columns.Length);
-        headerRange.Style.Font.Bold = true;
-        headerRange.Style.Fill.SetBackgroundColor(XLColor.FromHtml("#2F5597"));
-        headerRange.Style.Font.SetFontColor(XLColor.White);
-        headerRange.Style.Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-        headerRange.Style.Alignment.SetVertical(XLAlignmentVerticalValues.Center);
-        ws.Row(1).Height = 20;
     }
 
     private static void ApplyDataFormatting(IXLWorksheet ws, int rowCount)
@@ -89,17 +72,5 @@ public static class ReleaseNotesExporter
         var wordCountColIdx = Array.IndexOf(Columns, "word_count") + 1;
         ws.Range(2, wordCountColIdx, rowCount + 1, wordCountColIdx).Style
             .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-    }
-
-    private static void SetCell(IXLCell cell, object? value)
-    {
-        switch (value)
-        {
-            case null: break;
-            case int i: cell.Value = i; break;
-            case bool b: cell.Value = b; break;
-            case string s: cell.Value = s; break;
-            default: cell.Value = value.ToString(); break;
-        }
     }
 }

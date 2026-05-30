@@ -11,6 +11,7 @@ public class CardPoolExporter
     private readonly bool _latestOnly;
     private readonly bool _stripMaterials;
     private readonly string[]? _excludeTypes;
+    private readonly DateOnly? _since;
 
     public CardPoolExporter(
         YgoProDeckClient ygoDeck,
@@ -18,7 +19,8 @@ public class CardPoolExporter
         int wordLimit,
         bool latestOnly,
         bool stripMaterials,
-        string[]? excludeTypes)
+        string[]? excludeTypes,
+        DateOnly? since = null)
     {
         _ygoDeck = ygoDeck;
         _yugipedia = yugipedia;
@@ -26,13 +28,10 @@ public class CardPoolExporter
         _latestOnly = latestOnly;
         _stripMaterials = stripMaterials;
         _excludeTypes = excludeTypes;
+        _since = since;
     }
 
-    public async Task ExportAsync(
-        string outputXlsx,
-        string outputCsv,
-        DateOnly? since = null,
-        string? releaseNotesPath = null)
+    public async Task ExportAsync(string outputDirectory)
     {
         var allCards = await FetchPlayableCardsAsync();
 
@@ -44,18 +43,39 @@ public class CardPoolExporter
             .ThenBy(r => r.Name)
             .ToList();
 
-        Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
-        ExcelExporter.Export(rows, outputXlsx, _wordLimit);
-        CsvExporter.Export(rows, outputCsv);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var todayStr = today.ToString(AppConstants.IsoDateFormat, CultureInfo.InvariantCulture);
+        var runDir = Path.Combine(outputDirectory, todayStr);
+        Directory.CreateDirectory(runDir);
 
-        if (since is not null && releaseNotesPath is not null)
+        var prefix = BuildPrefix();
+        var exportBase = Path.Combine(runDir, $"{prefix}_export");
+
+        ExcelExporter.Export(rows, exportBase + ".xlsx", _wordLimit);
+        CsvExporter.Export(rows, exportBase + ".csv");
+
+        if (_since is not null)
         {
-            ReleaseNotesExporter.Export(rows, since.Value, releaseNotesPath);
-            Console.WriteLine($"Release notes → {releaseNotesPath}");
+            var rnPath = Path.Combine(runDir, $"{prefix}_release_notes.xlsx");
+            ReleaseNotesExporter.Export(rows, _since.Value, rnPath);
+            Console.WriteLine($"Release notes → {rnPath}");
         }
 
         var eligible = rows.Count(r => r.IsEligible);
-        Console.WriteLine($"Done. {eligible} eligible / {rows.Count} total → {outputXlsx}");
+        Console.WriteLine($"Done. {eligible} eligible / {rows.Count} total → {exportBase}.xlsx");
+    }
+
+    private string BuildPrefix()
+    {
+        var materialsPart = _stripMaterials ? "no_materials" : "with_materials";
+        var wordsPart = _wordLimit == AppConstants.DefaultWordLimit ? ""
+            : _wordLimit == int.MaxValue ? "_all_words"
+            : $"_{_wordLimit}words";
+        var typesSuffix = _excludeTypes is null or { Length: 0 }
+            ? "_all_types"
+            : "_excl_" + string.Join("_", _excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
+        var errataSuffix = _latestOnly ? "_latest" : "";
+        return $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}";
     }
 
     private bool NeedsErrataFetch() => !_latestOnly && _wordLimit != int.MaxValue;

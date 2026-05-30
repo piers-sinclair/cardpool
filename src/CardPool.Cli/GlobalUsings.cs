@@ -1,4 +1,5 @@
 global using AngleSharp;
+global using CardPool.Cli;
 global using AngleSharp.Dom;
 global using ClosedXML.Excel;
 global using CsvHelper;

@@ -12,7 +12,7 @@ public static class CardNormalizer
 
     public static NormalizedRow Normalize(
         YgoCard card,
-        CardErrata errata,
+        CardErrata? errata,
         int wordLimit)
     {
         var resolved = card.GetCardErrata(errata);

@@ -10,12 +10,14 @@ internal static partial class YgoCardExtensions
     [GeneratedRegex(@"\[\s*Monster Effect\s*\]|Monster Effect\s*:", RegexOptions.IgnoreCase)]
     private static partial Regex HasMonsterMarkerRegex();
 
-    internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata errata)
+    internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata? errata)
     {
-        var resolvedShortest = errata.Shortest ?? card.Desc;
-        var resolvedLatest = errata.Latest ?? card.Desc;
+        if (errata is null)
+            return new ResolvedErrata(card.Desc, card.Desc);
 
-        if (card.Type.IsPendulumEffectType() && errata.Shortest is not null)
+        var resolvedShortest = errata.Shortest;
+
+        if (card.Type.IsPendulumEffectType())
         {
             var hasPend = HasPendulumMarkerRegex().IsMatch(resolvedShortest);
             var hasMons = HasMonsterMarkerRegex().IsMatch(resolvedShortest);
@@ -26,6 +28,6 @@ internal static partial class YgoCardExtensions
             }
         }
 
-        return new ResolvedErrata(resolvedShortest, resolvedLatest);
+        return new ResolvedErrata(resolvedShortest, errata.Latest);
     }
 }

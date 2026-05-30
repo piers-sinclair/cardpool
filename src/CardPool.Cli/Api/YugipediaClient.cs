@@ -30,10 +30,7 @@ public sealed class YugipediaClient : IDisposable
 
         var pages = json?["query"]?["pages"]?.AsObject();
         if (pages is null)
-        {
-            foreach (var n in cardNames) result[n] = new(null, null);
             return result;
-        }
 
         var pageMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var (_, page) in pages)
@@ -55,9 +52,8 @@ public sealed class YugipediaClient : IDisposable
 
         foreach (var name in cardNames)
         {
-            result[name] = pageMap.TryGetValue(name, out var lores)
-                ? new(lores.MinBy(WordCounter.CountWords), lores[^1])
-                : new(null, null);
+            if (pageMap.TryGetValue(name, out var lores))
+                result[name] = new(lores.MinBy(WordCounter.CountWords)!, lores[^1]);
         }
 
         return result;

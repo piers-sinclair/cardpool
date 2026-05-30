@@ -53,7 +53,7 @@ public class CardPoolExporter(
     {
         Console.WriteLine("Normalizing...");
         return cards
-            .Select(card => BuildRow(card, default))
+            .Select(card => BuildRow(card, null))
             .Where(row => IsTypeIncluded(row.Type))
             .ToList();
     }
@@ -89,7 +89,7 @@ public class CardPoolExporter(
         return errataMap;
     }
 
-    private NormalizedRow BuildRow(YgoCard card, CardErrata errata)
+    private NormalizedRow BuildRow(YgoCard card, CardErrata? errata)
     {
         var row = CardNormalizer.Normalize(card, errata, wordLimit);
         return stripMaterials ? MaterialStripper.PostprocessRow(row) : row;

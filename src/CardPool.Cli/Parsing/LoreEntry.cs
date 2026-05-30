@@ -1,3 +1,3 @@
 namespace CardPool.Cli.Parsing;
 
-public record LoreEntry(string Text, string? Date);
+public record LoreEntry(string Text, string? SetName);

@@ -3,7 +3,9 @@ namespace CardPool.Cli.Api;
 public sealed class YgoProDeckClient(HttpClient http) : IDisposable
 {
     private const string ApiUrl = "https://db.ygoprodeck.com/api/v7/cardinfo.php";
+    private const string SetApiUrl = "https://db.ygoprodeck.com/api/v7/cardsets.php";
     private const string CacheFile = ".cardpool/cards_misc.json";
+    private const string SetCacheFile = ".cardpool/sets.json";
     private static readonly TimeSpan CacheMaxAge = TimeSpan.FromHours(24);
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -45,7 +47,38 @@ public sealed class YgoProDeckClient(HttpClient http) : IDisposable
         return wrapper?.Data?.FirstOrDefault();
     }
 
+    public async Task<Dictionary<string, string>> FetchSetDatesAsync()
+    {
+        List<CardSetInfo>? sets = null;
+
+        if (File.Exists(SetCacheFile) && DateTime.UtcNow - new FileInfo(SetCacheFile).LastWriteTimeUtc < CacheMaxAge)
+        {
+            await using var stream = File.OpenRead(SetCacheFile);
+            sets = await JsonSerializer.DeserializeAsync<List<CardSetInfo>>(stream, JsonOptions);
+        }
+
+        if (sets is null)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(SetCacheFile)!);
+            using var response = await http.GetAsync(SetApiUrl, HttpCompletionOption.ResponseHeadersRead);
+            response.EnsureSuccessStatusCode();
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            await File.WriteAllBytesAsync(SetCacheFile, bytes);
+
+            sets = JsonSerializer.Deserialize<List<CardSetInfo>>(bytes, JsonOptions) ?? [];
+        }
+
+        return sets
+            .Where(s => s.TcgDate is not null)
+            .ToDictionary(s => s.SetName, s => s.TcgDate!, StringComparer.OrdinalIgnoreCase);
+    }
+
     private sealed record CardsWrapper([property: JsonPropertyName("data")] List<YgoCard>? Data);
+
+    private sealed record CardSetInfo(
+        [property: JsonPropertyName("set_name")] string SetName,
+        [property: JsonPropertyName("tcg_date")] string? TcgDate);
 
     public void Dispose() { }
 }

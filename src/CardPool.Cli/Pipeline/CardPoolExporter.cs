@@ -86,6 +86,9 @@ public class CardPoolExporter
             .ToList();
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
+        Console.WriteLine("Fetching set dates from YGOProDeck...");
+        var setDates = await _ygoDeck.FetchSetDatesAsync();
+
         var errataMap = new Dictionary<string, CardErrata>(StringComparer.OrdinalIgnoreCase);
         var processed = 0;
 
@@ -99,7 +102,7 @@ public class CardPoolExporter
 
         async ValueTask ProcessBatchAsync(YgoCard[] batch, CancellationToken _)
         {
-            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList());
+            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList(), setDates);
             int currentProcessed;
             lock (errataMap)
             {

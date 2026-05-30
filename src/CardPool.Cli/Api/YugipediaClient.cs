@@ -32,7 +32,8 @@ public sealed class YugipediaClient : IDisposable
     }
 
     public async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
-        IReadOnlyList<string> cardNames)
+        IReadOnlyList<string> cardNames,
+        IReadOnlyDictionary<string, string>? setDates = null)
     {
         var json = await ThrottledGetWithRetryAsync(BuildErrataQueryUrl(cardNames));
         var result = new Dictionary<string, CardErrata>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
@@ -48,7 +49,10 @@ public sealed class YugipediaClient : IDisposable
             {
                 var shortest = lores.MinBy(e => WordCounter.CountWords(e.Text))!;
                 var latest = lores[^1];
-                result[name] = new(shortest.Text, latest.Text, latest.Date);
+                var latestDate = latest.SetName is not null
+                    ? setDates?.GetValueOrDefault(latest.SetName)
+                    : null;
+                result[name] = new(shortest.Text, latest.Text, latestDate);
             }
         }
 

@@ -2,12 +2,13 @@ namespace CardPool.Tests;
 
 public class CardNormalizerTests
 {
-    private static YgoCard MakeCard(string type, string desc, string? tcgDate = null) =>
+    private static YgoCard MakeCard(string type, string desc, string? tcgDate = null, string? earliestSetDate = null) =>
         new(Id: 1, Name: "Test", Type: type, Race: null, Attribute: null,
             Level: null, Atk: null, Def: null, Scale: null, LinkVal: null,
             LinkMarkers: null, Archetype: null, Desc: desc,
             CardSets: null, BanlistInfo: null, CardImages: null,
-            MiscInfo: tcgDate is null ? null : [new MiscInfo(tcgDate)]);
+            MiscInfo: tcgDate is null ? null : [new MiscInfo(tcgDate)])
+        { EarliestSetDate = earliestSetDate };
 
     private static CardErrata SingleLoreErrata(string text, string? date = null) =>
         new(text, text, [new ErrataLore(text, date)]);
@@ -103,6 +104,16 @@ public class CardNormalizerTests
         var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
 
         row.EligibleSince.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Normalize_NoErrataPageNullTcgDateWithEarliestSetDate_EligibleSinceFromSetDate()
+    {
+        var card = MakeCard("Normal Monster", "Flavour text.", earliestSetDate: "2002-03-08");
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
+
+        row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
     }
 
     [Fact]

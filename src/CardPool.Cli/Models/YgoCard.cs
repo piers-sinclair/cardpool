@@ -21,6 +21,9 @@ public record YgoCard(
 )
 {
     public string? TcgDate => MiscInfo is { Length: > 0 } ? MiscInfo[0].TcgDate : null;
+    public bool IsTcgLegal => TcgDate is not null;
+    public string? EarliestSetDate { get; init; }
+    internal string? BestTcgDate => TcgDate ?? EarliestSetDate;
 }
 
 public record CardSet(

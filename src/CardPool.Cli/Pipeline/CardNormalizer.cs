@@ -48,16 +48,16 @@ public static class CardNormalizer
     private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials)
     {
         if (errata is null)
-            return ParseDate(card.TcgDate);
+            return ParseDate(card.BestTcgDate);
 
         var firstEligibleLore = errata.AllLores
             .FirstOrDefault(l => CountWords(l.Text, card.Type, stripMaterials) <= wordLimit);
 
         if (firstEligibleLore is not null)
-            return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
+            return ParseDate(firstEligibleLore.Date ?? card.BestTcgDate);
 
         return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
-            ? ParseDate(card.TcgDate)
+            ? ParseDate(card.BestTcgDate)
             : null;
     }
 

@@ -28,17 +28,23 @@ Excel/CSV. Used for Edison format play to identify cards eligible under the ≤N
 src/
   CardPool.Cli/
     Api/                  ← YgoProDeckClient, YugipediaClient (HTTP + rate limiting)
-    Parsing/              ← WikitextParser (wikitext→lore), HtmlErrataScraper (inspect cmd)
+    Parsing/              ← WikitextParser (wikitext→lore), HtmlErrataScraper (inspect cmd), LoreEntry
     WordCount/            ← WordCounter (pure logic, no I/O)
-    Pipeline/             ← ExportPipeline, CardNormalizer, MaterialStripper
-    Export/               ← ExcelExporter (ClosedXML), CsvExporter (CsvHelper)
-    Models/               ← YgoCard (API model), NormalizedRow (output model)
+    Pipeline/             ← CardPoolExporter, CardNormalizer, MaterialStripper, YgoCardExtensions
+    Export/               ← CardPoolExcelExporter, CardPoolCsvExporter, ReleaseNotesExcelExporter,
+                            ReleaseNotesCsvExporter, ExcelFormatter (ClosedXML), CsvFormatter (CsvHelper)
+    Models/               ← YgoCard (API model), NormalizedRow (output model), CardErrata,
+                            CardTypeExtensions, StringExtensions
+    AppConstants.cs       ← shared constants (DefaultWordLimit, IsoDateFormat)
     GlobalUsings.cs       ← global usings for the project
     Program.cs            ← System.CommandLine entry point
 tests/
   CardPool.Tests/
-    WordCounterTests.cs         ← unit tests, no network
-    MaterialStripperTests.cs    ← unit tests, no network
+    WordCounterTests.cs               ← unit tests, no network
+    MaterialStripperTests.cs          ← unit tests, no network
+    CardNormalizerTests.cs            ← unit tests, no network
+    CardPoolCsvExporterTests.cs       ← unit tests, no network
+    ReleaseNotesExcelExporterTests.cs ← unit tests, no network
     GlobalUsings.cs
 output/                   ← generated Excel/CSV files (git-ignored)
 Directory.Build.props     ← shared MSBuild properties (TreatWarningsAsErrors, etc.)
@@ -75,6 +81,9 @@ dotnet run --project src/CardPool.Cli -- export --errata-mode shortest          
 
 # --output: custom output directory
 dotnet run --project src/CardPool.Cli -- export --output ~/ygo
+
+# --since: generate release notes alongside the export for cards eligible on or after this date
+dotnet run --project src/CardPool.Cli -- export --since 2025-01-01
 
 # Inspect a single card
 dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
@@ -165,7 +174,7 @@ Some Yugipedia errata pages (e.g. OCG-only cards like Treasure Map) have an `== 
 
 ### Incomplete Pendulum errata detection
 
-Yugipedia sometimes stores only one section (`[Pendulum Effect]` or `[Monster Effect]`) for Pendulum Effect Monsters. `CardNormalizer.Normalize` detects this (`hasPend != hasMons`) and falls back to the YGOProDeck `desc`, which always has both sections.
+Yugipedia sometimes stores only one section (`[Pendulum Effect]` or `[Monster Effect]`) for Pendulum Effect Monsters. `YgoCardExtensions.GetCardErrata` detects this (`hasPend != hasMons`) and falls back to the YGOProDeck `desc`, which always has both sections.
 
 ### Rate limiting
 
@@ -212,7 +221,7 @@ All projects inherit from `Directory.Build.props`:
 ## Game rules context
 
 Edison format (September 2010 banlist). The ≤N-word rule: if any printing of a card has ≤N words
-in its effect text, the card may be played as written in that printing. The default threshold is 20.
+in its effect text, the card may be played as written in that printing. The default threshold is 25.
 See the Python ygodb `CLAUDE.md` for the full word-counting specification.
 
 ---

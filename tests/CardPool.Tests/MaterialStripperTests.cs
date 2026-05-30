@@ -207,4 +207,23 @@ public class MaterialStripperTests
         result.WordCount.ShouldBe(0);
         result.IsEligible.ShouldBeTrue();
     }
+
+    [Fact]
+    public void PostprocessRow_SynchroCardFullTextOverLimitShortEffectUnderLimit_StrippingMakesEligible()
+    {
+        var row = new NormalizedRow
+        {
+            Type = "Synchro Monster",
+            Desc = "1 Tuner + 1 non-Tuner\nOnce per turn: Draw 1 card.",
+            ShortestErrata = "1 Tuner + 1 non-Tuner\nOnce per turn: Draw 1 card.",
+            LatestErrata = "1 Tuner + 1 non-Tuner\nOnce per turn: Draw 1 card.",
+            WordLimit = 7
+        };
+
+        var result = MaterialStripper.PostprocessRow(row);
+
+        result.IsEligible.ShouldBeTrue();
+        result.Materials.ShouldBe("1 Tuner + 1 non-Tuner");
+        result.WordCount.ShouldBe(WordCounter.CountWords("Once per turn: Draw 1 card."));
+    }
 }

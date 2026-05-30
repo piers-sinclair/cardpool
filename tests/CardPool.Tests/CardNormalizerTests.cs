@@ -58,4 +58,29 @@ public class CardNormalizerTests
 
         row.WordCount.ShouldBe(4);
     }
+
+    [Fact]
+    public void Normalize_EffectMonsterDescOverWordLimit_IsNotEligible()
+    {
+        var desc = string.Join(" ", Enumerable.Repeat("word", 30));
+        var card = MakeCard("Effect Monster", desc);
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
+
+        row.WordCount.ShouldBe(30);
+        row.IsEligible.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Normalize_EffectMonsterDescOverLimitShortestErrataUnderLimit_IsEligible()
+    {
+        var desc = string.Join(" ", Enumerable.Repeat("word", 30));
+        var card = MakeCard("Effect Monster", desc);
+        const string shortErrata = "Once per turn: Draw 1 card.";
+
+        var row = CardNormalizer.Normalize(card, new CardErrata(shortErrata, desc), wordLimit: 20);
+
+        row.WordCount.ShouldBe(WordCounter.CountWords(shortErrata));
+        row.IsEligible.ShouldBeTrue();
+    }
 }

@@ -52,11 +52,18 @@ var outputOption = new Option<string>("--output")
     DefaultValueFactory = _ => "output"
 };
 
+var sinceOption = new Option<string?>("--since")
+{
+    Description = "Baseline date (YYYY-MM-DD) for release notes. Omit to auto-detect the most recent matching export in the output directory.",
+    DefaultValueFactory = _ => null
+};
+
 exportCommand.Add(wordsOption);
 exportCommand.Add(stripMaterialsOption);
 exportCommand.Add(excludeTypesOption);
 exportCommand.Add(errataModeOption);
 exportCommand.Add(outputOption);
+exportCommand.Add(sinceOption);
 
 exportCommand.SetAction(async parseResult =>
 {
@@ -65,6 +72,7 @@ exportCommand.SetAction(async parseResult =>
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
+    var since = parseResult.GetValue(sinceOption);
     var latestOnly = errataMode.EqualsIgnoreCase(ErrataModeLatest);
     var wordLimit = words == UnlimitedWords ? int.MaxValue : words;
     var excludeAll = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase(ExcludeAll);
@@ -75,7 +83,9 @@ exportCommand.SetAction(async parseResult =>
     var errataSuffix = latestOnly ? "_latest" : "";
     var materialsPart = stripMaterials ? "no_materials" : "with_materials";
     var wordsPart = words == DefaultWords ? "" : words == UnlimitedWords ? "_all_words" : $"_{words}words";
-    var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
+    var basePrefix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}";
+    var today = DateTime.Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+    var exportSuffix = $"{basePrefix}_export_{today}";
 
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
     var exporter = new CardPoolExporter(
@@ -87,9 +97,37 @@ exportCommand.SetAction(async parseResult =>
         excludeTypes: excludeAll ? null : excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);
+    var previousCsvPath = ResolvePreviousCsvPath(outputDirectory, basePrefix, since, today);
+    var releaseNotesPath = previousCsvPath is not null
+        ? Path.Combine(outputDirectory, $"{basePrefix}_release_notes_{today}.xlsx")
+        : null;
     await exporter.ExportAsync(
-        $"{outputDirectory}/{suffix}.xlsx",
-        $"{outputDirectory}/{suffix}.csv");
+        $"{outputDirectory}/{exportSuffix}.xlsx",
+        $"{outputDirectory}/{exportSuffix}.csv",
+        previousCsvPath,
+        releaseNotesPath);
+
+    static string? ResolvePreviousCsvPath(string outputDir, string prefix, string? since, string today)
+    {
+        var pattern = new Regex(
+            $@"^{Regex.Escape(prefix)}_export_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$",
+            RegexOptions.IgnoreCase);
+
+        if (since is not null)
+        {
+            var explicitPath = Path.Combine(outputDir, $"{prefix}_export_{since}.csv");
+            return File.Exists(explicitPath) ? explicitPath : null;
+        }
+
+        return Directory.EnumerateFiles(outputDir, "*.csv")
+            .Select(p => (Path: p, Match: pattern.Match(Path.GetFileName(p))))
+            .Where(x => x.Match.Success)
+            .Select(x => (x.Path, Date: x.Match.Groups[1].Value))
+            .Where(x => x.Date != today)
+            .OrderByDescending(x => x.Date)
+            .Select(x => x.Path)
+            .FirstOrDefault();
+    }
 });
 
 rootCommand.Add(exportCommand);

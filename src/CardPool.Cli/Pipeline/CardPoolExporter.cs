@@ -28,7 +28,11 @@ public class CardPoolExporter
         _excludeTypes = excludeTypes;
     }
 
-    public async Task ExportAsync(string outputXlsx, string outputCsv)
+    public async Task ExportAsync(
+        string outputXlsx,
+        string outputCsv,
+        string? previousCsvPath = null,
+        string? releaseNotesPath = null)
     {
         var allCards = await FetchPlayableCardsAsync();
 
@@ -43,6 +47,13 @@ public class CardPoolExporter
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, _wordLimit);
         CsvExporter.Export(rows, outputCsv);
+
+        if (previousCsvPath is not null && releaseNotesPath is not null)
+        {
+            var previous = PreviousExportReader.Read(previousCsvPath);
+            ReleaseNotesExporter.Export(rows, previous, releaseNotesPath);
+            Console.WriteLine($"Release notes → {releaseNotesPath}");
+        }
 
         var eligible = rows.Count(r => r.IsEligible);
         Console.WriteLine($"Done. {eligible} eligible / {rows.Count} total → {outputXlsx}");

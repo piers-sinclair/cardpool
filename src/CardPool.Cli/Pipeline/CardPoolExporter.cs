@@ -49,14 +49,15 @@ public class CardPoolExporter
         Directory.CreateDirectory(runDir);
 
         var prefix = BuildPrefix();
-        var exportBase = Path.Combine(runDir, $"{prefix}_export");
+        var exportBase = Path.Combine(runDir, $"cardpool_{prefix}");
 
         CardPoolExcelExporter.Export(rows, exportBase + ".xlsx", _wordLimit);
         CardPoolCsvExporter.Export(rows, exportBase + ".csv");
 
         if (_since is not null)
         {
-            var rnBase = Path.Combine(runDir, $"{prefix}_release_notes");
+            var sinceStr = _since.Value.ToString(AppConstants.IsoDateFormat, CultureInfo.InvariantCulture);
+            var rnBase = Path.Combine(runDir, $"release_notes_{sinceStr}_{prefix}");
             ReleaseNotesExcelExporter.Export(rows, _since.Value, rnBase + ".xlsx");
             ReleaseNotesCsvExporter.Export(rows, _since.Value, rnBase + ".csv");
             Console.WriteLine($"Release notes → {rnBase}.xlsx / .csv");

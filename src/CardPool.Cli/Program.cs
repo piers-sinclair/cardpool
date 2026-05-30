@@ -1,6 +1,5 @@
 const string ExcludeAll = "none";
 const string ErrataModeLatest = "latest";
-const int DefaultWords = 25;
 const int UnlimitedWords = -1;
 
 var rootCommand = new RootCommand(
@@ -24,7 +23,7 @@ var exportCommand = new Command("export",
 var wordsOption = new Option<int>("--words")
 {
     Description = "Word-count threshold — cards with any printing at or below this limit are included (default: 25, use -1 for no limit)",
-    DefaultValueFactory = _ => 25
+    DefaultValueFactory = _ => AppConstants.DefaultWordLimit
 };
 
 var stripMaterialsOption = new Option<bool>("--strip-materials")
@@ -52,11 +51,18 @@ var outputOption = new Option<string>("--output")
     DefaultValueFactory = _ => "output"
 };
 
+var sinceOption = new Option<string?>("--since")
+{
+    Description = "Generate a release notes file alongside the export showing cards that became eligible on or after this date (YYYY-MM-DD).",
+    DefaultValueFactory = _ => null
+};
+
 exportCommand.Add(wordsOption);
 exportCommand.Add(stripMaterialsOption);
 exportCommand.Add(excludeTypesOption);
 exportCommand.Add(errataModeOption);
 exportCommand.Add(outputOption);
+exportCommand.Add(sinceOption);
 
 exportCommand.SetAction(async parseResult =>
 {
@@ -65,17 +71,11 @@ exportCommand.SetAction(async parseResult =>
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
+    var since = parseResult.GetValue(sinceOption);
     var latestOnly = errataMode.EqualsIgnoreCase(ErrataModeLatest);
     var wordLimit = words == UnlimitedWords ? int.MaxValue : words;
     var excludeAll = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase(ExcludeAll);
-
-    var typesSuffix = excludeAll
-        ? "_all_types"
-        : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
-    var errataSuffix = latestOnly ? "_latest" : "";
-    var materialsPart = stripMaterials ? "no_materials" : "with_materials";
-    var wordsPart = words == DefaultWords ? "" : words == UnlimitedWords ? "_all_words" : $"_{words}words";
-    var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
+    DateOnly? sinceDate = DateOnly.TryParse(since, CultureInfo.InvariantCulture, out var d) ? d : null;
 
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
     var exporter = new CardPoolExporter(
@@ -84,12 +84,11 @@ exportCommand.SetAction(async parseResult =>
         wordLimit,
         latestOnly,
         stripMaterials,
-        excludeTypes: excludeAll ? null : excludeTypes);
+        excludeTypes: excludeAll ? null : excludeTypes,
+        since: sinceDate);
 
     Directory.CreateDirectory(outputDirectory);
-    await exporter.ExportAsync(
-        $"{outputDirectory}/{suffix}.xlsx",
-        $"{outputDirectory}/{suffix}.csv");
+    await exporter.ExportAsync(outputDirectory);
 });
 
 rootCommand.Add(exportCommand);

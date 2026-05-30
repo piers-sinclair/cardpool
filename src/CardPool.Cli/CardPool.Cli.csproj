@@ -6,7 +6,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>cpool</ToolCommandName>
     <PackageId>CardPool</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Authors>Piers Sinclair</Authors>
     <Description>Card pool generator for trading card game formats. Applies errata history and configurable criteria (e.g. word count) to export eligible card pools to Excel/CSV.</Description>

@@ -19,13 +19,22 @@ public class NormalizedRow
     public string ShortestErrata { get; set; } = "";
     public string LatestErrata { get; set; } = "";
     public DateOnly? EligibleSince { get; set; }
-    public string? EligibleSinceText => EligibleSince?.ToString(IsoDateFormat, System.Globalization.CultureInfo.InvariantCulture);
+    public string? EligibleSinceText => EligibleSince?.ToString(AppConstants.IsoDateFormat, CultureInfo.InvariantCulture);
     public int WordLimit { get; set; }
     public int WordCount => WordCounter.CountEffectiveWords(ShortestErrata, Type);
     public bool IsEligible => WordCount <= WordLimit;
     public string? ImageUrl { get; set; }
 
-    private const string IsoDateFormat = "yyyy-MM-dd";
+    public object?[] GetValues(bool includeMaterials) =>
+        includeMaterials
+        ? [Name, Type, Attribute, Race, Level, Atk, Def,
+           Materials, ShortestErrata, EligibleSinceText, WordCount, Archetype,
+           Scale, LinkVal, LinkMarkers,
+           LatestErrata, Id, ImageUrl, IsEligible]
+        : [Name, Type, Attribute, Race, Level, Atk, Def,
+           ShortestErrata, EligibleSinceText, WordCount, Archetype,
+           Scale, LinkVal, LinkMarkers,
+           LatestErrata, Id, ImageUrl, IsEligible];
 
     public NormalizedRow Clone() => (NormalizedRow)MemberwiseClone();
 

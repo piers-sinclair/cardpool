@@ -1,4 +1,3 @@
-using System.Globalization;
 using ClosedXML.Excel;
 
 namespace CardPool.Cli.Export;
@@ -6,17 +5,17 @@ namespace CardPool.Cli.Export;
 public static class ReleaseNotesExporter
 {
     private static readonly string[] Columns =
-        ["name", "card_type", "word_count", "shortest_errata", "latest_errata_date", "is_eligible"];
+        ["name", "card_type", "word_count", "shortest_errata", "eligible_since", "is_eligible"];
 
     private static readonly Dictionary<string, double> ColumnWidths =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["name"]               = 35,
-            ["card_type"]          = 28,
-            ["word_count"]         = 12,
-            ["shortest_errata"]    = 65,
-            ["latest_errata_date"] = 18,
-            ["is_eligible"]        = 13,
+            ["name"]           = 35,
+            ["card_type"]      = 28,
+            ["word_count"]     = 12,
+            ["shortest_errata"] = 65,
+            ["eligible_since"] = 18,
+            ["is_eligible"]    = 13,
         };
 
     public static void Export(
@@ -82,7 +81,7 @@ public static class ReleaseNotesExporter
                 r.Type,
                 r.WordCount,
                 r.ShortestErrata,
-                r.LatestErrataDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                r.EligibleSinceText,
                 r.IsEligible
             ];
             for (var colIdx = 0; colIdx < values.Length; colIdx++)

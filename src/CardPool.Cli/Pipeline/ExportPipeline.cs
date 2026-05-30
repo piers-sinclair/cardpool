@@ -17,7 +17,7 @@ public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
 
         var rows = NeedsErrataFetch(latestOnly, wordLimit)
             ? await BuildShortestErrataRowsAsync(allCards, wordLimit, stripMaterials, excludeTypes)
-            : BuildCurrentTextRows(allCards, wordLimit, stripMaterials, excludeTypes);
+            : BuildLatestErrataRows(allCards, wordLimit, stripMaterials, excludeTypes);
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, wordLimit);
@@ -87,7 +87,7 @@ public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
     private static bool NeedsErrataFetch(bool latestOnly, int wordLimit) =>
         !latestOnly && wordLimit != int.MaxValue;
 
-    private static List<NormalizedRow> BuildCurrentTextRows(
+    private static List<NormalizedRow> BuildLatestErrataRows(
         List<YgoCard> cards,
         int wordLimit,
         bool stripMaterials,

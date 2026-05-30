@@ -54,7 +54,7 @@ public class CardNormalizerTests
         var desc = "[ Pendulum Effect ] \npend a b c\n\n[ Monster Effect ] \nFlavour only.";
         var card = MakeCard("Pendulum Normal Monster", desc);
 
-        var row = CardNormalizer.Normalize(card, new CardErrata(null, null), wordLimit: 20);
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
 
         row.WordCount.ShouldBe(4);
     }

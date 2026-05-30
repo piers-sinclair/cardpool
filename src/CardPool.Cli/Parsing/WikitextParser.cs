@@ -23,10 +23,13 @@ public static partial class WikitextParser
     [GeneratedRegex(@"\|\s*lore(\d+)\s*=([^|]+?)(?=\s*\||\}\}|\z)", RegexOptions.Singleline)]
     private static partial Regex LoreFieldRegex();
 
+    [GeneratedRegex(@"\|\s*date(\d+)\s*=\s*([^|]+?)(?=\s*\||\}\}|\z)", RegexOptions.Singleline)]
+    private static partial Regex DateFieldRegex();
+
     private static readonly IBrowsingContext BrowsingContext =
         AngleSharp.BrowsingContext.New(Configuration.Default);
 
-    public static async Task<List<string>> ExtractEnglishLoresAsync(string wikitext)
+    public static async Task<List<LoreEntry>> ExtractEnglishLoresAsync(string wikitext)
     {
         var sectionMatch = EnglishSectionRegex().Match(wikitext);
         if (!sectionMatch.Success) return [];
@@ -38,12 +41,17 @@ public static partial class WikitextParser
             .OrderBy(x => x.index)
             .ToList();
 
-        var results = new List<string>(lores.Count);
-        foreach (var (_, raw) in lores)
+        var dates = DateFieldRegex().Matches(section)
+            .ToDictionary(
+                m => int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture),
+                m => m.Groups[2].Value.Trim());
+
+        var results = new List<LoreEntry>(lores.Count);
+        foreach (var (index, raw) in lores)
         {
             var text = await LoreFullAsync(raw);
             if (!string.IsNullOrWhiteSpace(text) && !text.ContainsJapanese())
-                results.Add(text);
+                results.Add(new LoreEntry(text, dates.GetValueOrDefault(index)));
         }
         return results;
     }

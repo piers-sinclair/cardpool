@@ -1,6 +1,6 @@
 namespace CardPool.Cli.Pipeline;
 
-internal record struct ResolvedErrata(string Shortest, string Latest);
+internal record struct ResolvedErrata(string Shortest, string Latest, string? LatestDate);
 
 internal static partial class YgoCardExtensions
 {
@@ -13,7 +13,7 @@ internal static partial class YgoCardExtensions
     internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata? errata)
     {
         if (errata is null)
-            return new ResolvedErrata(card.Desc, card.Desc);
+            return new ResolvedErrata(card.Desc, card.Desc, null);
 
         var resolvedShortest = errata.Shortest;
 
@@ -28,6 +28,6 @@ internal static partial class YgoCardExtensions
             }
         }
 
-        return new ResolvedErrata(resolvedShortest, errata.Latest);
+        return new ResolvedErrata(resolvedShortest, errata.Latest, errata.LatestDate);
     }
 }

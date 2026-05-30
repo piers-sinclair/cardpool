@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace CardPool.Cli.Pipeline;
 
 public static class CardNormalizer
@@ -36,13 +38,20 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
+            LatestErrataDate = ParseDate(resolved.LatestDate),
             WordLimit = wordLimit,
-            SetName = card.CardSets?[0].SetName,
-            SetCode = card.CardSets?[0].SetCode,
-            SetRarity = card.CardSets?[0].SetRarity,
-            BanTcg = card.BanlistInfo?.BanTcg,
-            BanOcg = card.BanlistInfo?.BanOcg,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
+    }
+
+    private static DateOnly? ParseDate(string? raw)
+    {
+        if (raw is null) return null;
+        var trimmed = raw.Trim();
+        if (DateOnly.TryParseExact(trimmed, "MMMM d, yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
+            return d;
+        if (DateOnly.TryParse(trimmed, CultureInfo.InvariantCulture, DateTimeStyles.None, out d))
+            return d;
+        return null;
     }
 }

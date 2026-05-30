@@ -16,7 +16,7 @@ public class CardNormalizerTests
 
         const string incompleteErrata = "Monster Effect: mon d e f";
 
-        var row = CardNormalizer.Normalize(card, new CardErrata(incompleteErrata, incompleteErrata), wordLimit: 20);
+        var row = CardNormalizer.Normalize(card, new CardErrata(incompleteErrata, incompleteErrata, null), wordLimit: 20);
 
         row.WordCount.ShouldBe(7);
         row.IsEligible.ShouldBeTrue();
@@ -30,7 +30,7 @@ public class CardNormalizerTests
 
         const string incompleteErrata = "[Pendulum Effect] pend a b";
 
-        var row = CardNormalizer.Normalize(card, new CardErrata(incompleteErrata, incompleteErrata), wordLimit: 20);
+        var row = CardNormalizer.Normalize(card, new CardErrata(incompleteErrata, incompleteErrata, null), wordLimit: 20);
 
         row.WordCount.ShouldBe(7);
     }
@@ -43,7 +43,7 @@ public class CardNormalizerTests
 
         const string completeErrata = "[Pendulum Effect] pend a b [Monster Effect] mon c d";
 
-        var row = CardNormalizer.Normalize(card, new CardErrata(completeErrata, completeErrata), wordLimit: 20);
+        var row = CardNormalizer.Normalize(card, new CardErrata(completeErrata, completeErrata, null), wordLimit: 20);
 
         row.WordCount.ShouldBe(6);
     }
@@ -78,7 +78,7 @@ public class CardNormalizerTests
         var card = MakeCard("Effect Monster", desc);
         const string shortErrata = "Once per turn: Draw 1 card.";
 
-        var row = CardNormalizer.Normalize(card, new CardErrata(shortErrata, desc), wordLimit: 20);
+        var row = CardNormalizer.Normalize(card, new CardErrata(shortErrata, desc, null), wordLimit: 20);
 
         row.WordCount.ShouldBe(WordCounter.CountWords(shortErrata));
         row.IsEligible.ShouldBeTrue();

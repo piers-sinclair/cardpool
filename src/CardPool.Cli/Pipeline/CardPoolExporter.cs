@@ -32,9 +32,13 @@ public class CardPoolExporter
     {
         var allCards = await FetchPlayableCardsAsync();
 
-        var rows = NeedsErrataFetch()
+        var rows = (NeedsErrataFetch()
             ? await BuildShortestErrataRowsAsync(allCards)
-            : BuildLatestErrataRows(allCards);
+            : BuildLatestErrataRows(allCards))
+            .OrderByDescending(r => r.LatestErrataDate.HasValue)
+            .ThenByDescending(r => r.LatestErrataDate)
+            .ThenBy(r => r.Name)
+            .ToList();
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, _wordLimit);

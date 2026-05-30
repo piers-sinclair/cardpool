@@ -1,3 +1,8 @@
+const string ExcludeAll = "none";
+const string ErrataModeLatest = "latest";
+const int DefaultWords = 25;
+const int UnlimitedWords = -1;
+
 var rootCommand = new RootCommand(
     "CardPool — trading card game pool analysis and export tool.\n" +
     "Fetches ~12,000 cards from YGOProDeck, applies errata history from Yugipedia,\n" +
@@ -60,15 +65,16 @@ exportCommand.SetAction(async parseResult =>
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
-    var latestOnly = errataMode.EqualsIgnoreCase("latest");
-    var wordLimit = words == -1 ? int.MaxValue : words;
+    var latestOnly = errataMode.EqualsIgnoreCase(ErrataModeLatest);
+    var wordLimit = words == UnlimitedWords ? int.MaxValue : words;
+    var excludeAll = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase(ExcludeAll);
 
-    var typesSuffix = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase("none")
+    var typesSuffix = excludeAll
         ? "_all_types"
         : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
     var errataSuffix = latestOnly ? "_latest" : "";
     var materialsPart = stripMaterials ? "no_materials" : "with_materials";
-    var wordsPart = words == 25 ? "" : words == -1 ? "_all_words" : $"_{words}words";
+    var wordsPart = words == DefaultWords ? "" : words == UnlimitedWords ? "_all_words" : $"_{words}words";
     var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
@@ -78,7 +84,7 @@ exportCommand.SetAction(async parseResult =>
         wordLimit,
         latestOnly,
         stripMaterials,
-        excludeTypes);
+        excludeTypes: excludeAll ? null : excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);
     await exporter.ExportAsync(

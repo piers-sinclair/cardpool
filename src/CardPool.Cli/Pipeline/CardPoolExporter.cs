@@ -116,6 +116,5 @@ public class CardPoolExporter
 
     private bool IsTypeIncluded(string cardType) =>
         _excludeTypes is null or { Length: 0 }
-        || _excludeTypes.ContainsIgnoreCase("none")
         || _excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
 }

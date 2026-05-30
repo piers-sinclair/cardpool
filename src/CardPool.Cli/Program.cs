@@ -56,7 +56,7 @@ exportCommand.Add(outputOption);
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
-    var noMaterials = parseResult.GetValue(noMaterialsOption);
+    var stripMaterials = parseResult.GetValue(noMaterialsOption);
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
@@ -67,7 +67,7 @@ exportCommand.SetAction(async parseResult =>
         ? "_all_types"
         : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
     var errataSuffix = latestOnly ? "_latest" : "";
-    var materialsPart = noMaterials ? "no_materials" : "with_materials";
+    var materialsPart = stripMaterials ? "no_materials" : "with_materials";
     var wordsPart = words == 25 ? "" : words == -1 ? "_all_words" : $"_{words}words";
     var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
@@ -77,7 +77,7 @@ exportCommand.SetAction(async parseResult =>
         new YugipediaClient(http),
         wordLimit,
         latestOnly,
-        stripMaterials: noMaterials,
+        stripMaterials,
         excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);

@@ -1,7 +1,11 @@
+using System.Globalization;
+
 namespace CardPool.Cli.Pipeline;
 
 public static class CardNormalizer
 {
+    private const string YugipediaDateFormat = "MMMM d, yyyy";
+
     public static bool NeedsErrataLookup(YgoCard card, int wordLimit)
     {
         if (card.Type.IsPureNormalMonster())
@@ -13,7 +17,8 @@ public static class CardNormalizer
     public static NormalizedRow Normalize(
         YgoCard card,
         CardErrata? errata,
-        int wordLimit)
+        int wordLimit,
+        bool stripMaterials = false)
     {
         var resolved = card.GetCardErrata(errata);
 
@@ -36,13 +41,42 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
+            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials),
             WordLimit = wordLimit,
-            SetName = card.CardSets?[0].SetName,
-            SetCode = card.CardSets?[0].SetCode,
-            SetRarity = card.CardSets?[0].SetRarity,
-            BanTcg = card.BanlistInfo?.BanTcg,
-            BanOcg = card.BanlistInfo?.BanOcg,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
+    }
+
+    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials)
+    {
+        if (errata is null)
+            return ParseDate(card.TcgDate);
+
+        var firstEligibleLore = errata.AllLores
+            .FirstOrDefault(l => CountWords(l.Text, card.Type, stripMaterials) <= wordLimit);
+
+        if (firstEligibleLore is not null)
+            return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
+
+        return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
+            ? ParseDate(card.TcgDate)
+            : null;
+    }
+
+    private static int CountWords(string text, string type, bool stripMaterials)
+    {
+        var effective = stripMaterials ? MaterialStripper.StripMaterialLine(text) : text;
+        return WordCounter.CountEffectiveWords(effective, type);
+    }
+
+    private static DateOnly? ParseDate(string? raw)
+    {
+        if (raw is null) return null;
+        var trimmed = raw.Trim();
+        if (DateOnly.TryParseExact(trimmed, YugipediaDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
+            return d;
+        if (DateOnly.TryParse(trimmed, CultureInfo.InvariantCulture, DateTimeStyles.None, out d))
+            return d;
+        return null;
     }
 }

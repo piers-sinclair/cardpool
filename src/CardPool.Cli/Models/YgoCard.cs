@@ -16,8 +16,12 @@ public record YgoCard(
     [property: JsonPropertyName("desc")] string Desc,
     [property: JsonPropertyName("card_sets")] CardSet[]? CardSets,
     [property: JsonPropertyName("banlist_info")] BanlistInfo? BanlistInfo,
-    [property: JsonPropertyName("card_images")] CardImage[]? CardImages
-);
+    [property: JsonPropertyName("card_images")] CardImage[]? CardImages,
+    [property: JsonPropertyName("misc_info")] MiscInfo[]? MiscInfo
+)
+{
+    public string? TcgDate => MiscInfo is { Length: > 0 } ? MiscInfo[0].TcgDate : null;
+}
 
 public record CardSet(
     [property: JsonPropertyName("set_name")] string SetName,
@@ -32,4 +36,8 @@ public record BanlistInfo(
 
 public record CardImage(
     [property: JsonPropertyName("image_url")] string ImageUrl
+);
+
+public record MiscInfo(
+    [property: JsonPropertyName("tcg_date")] string? TcgDate
 );

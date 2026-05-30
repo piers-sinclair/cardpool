@@ -18,35 +18,30 @@ public class NormalizedRow
     public string? Materials { get; set; }
     public string ShortestErrata { get; set; } = "";
     public string LatestErrata { get; set; } = "";
+    public DateOnly? EligibleSince { get; set; }
+    public string? EligibleSinceText => EligibleSince?.ToString(IsoDateFormat, System.Globalization.CultureInfo.InvariantCulture);
     public int WordLimit { get; set; }
     public int WordCount => WordCounter.CountEffectiveWords(ShortestErrata, Type);
     public bool IsEligible => WordCount <= WordLimit;
-    public string? SetName { get; set; }
-    public string? SetCode { get; set; }
-    public string? SetRarity { get; set; }
-    public string? BanTcg { get; set; }
-    public string? BanOcg { get; set; }
     public string? ImageUrl { get; set; }
+
+    private const string IsoDateFormat = "yyyy-MM-dd";
 
     public NormalizedRow Clone() => (NormalizedRow)MemberwiseClone();
 
     public static readonly string[] OutputColumns =
     [
-        "name", "type", "attribute", "race", "level", "atk", "def",
-        "word_count", "shortest_errata",
-        "scale", "linkval", "linkmarkers", "archetype",
-        "set_name", "set_code", "set_rarity",
-        "ban_tcg", "ban_ocg",
-        "latest_errata", "desc", "id", "image_url", "is_eligible"
+        "name", "card_type", "attribute", "subtype", "level", "atk", "def",
+        "shortest_errata", "eligible_since", "word_count", "archetype",
+        "scale", "linkval", "linkmarkers",
+        "latest_errata", "id", "image_url", "is_eligible"
     ];
 
     public static readonly string[] OutputColumnsWithMaterials =
     [
-        "name", "type", "attribute", "race", "level", "atk", "def",
-        "word_count", "materials", "shortest_errata",
-        "scale", "linkval", "linkmarkers", "archetype",
-        "set_name", "set_code", "set_rarity",
-        "ban_tcg", "ban_ocg",
-        "latest_errata", "desc", "id", "image_url", "is_eligible"
+        "name", "card_type", "attribute", "subtype", "level", "atk", "def",
+        "materials", "shortest_errata", "eligible_since", "word_count", "archetype",
+        "scale", "linkval", "linkmarkers",
+        "latest_errata", "id", "image_url", "is_eligible"
     ];
 }

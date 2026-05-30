@@ -30,18 +30,14 @@ public static class CsvExporter
         includeMaterials
         ? [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.WordCount, r.Materials, r.ShortestErrata,
-            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-            r.SetName, r.SetCode, r.SetRarity,
-            r.BanTcg, r.BanOcg,
-            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+            r.Materials, r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
+            r.Scale, r.LinkVal, r.LinkMarkers,
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ]
         : [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.WordCount, r.ShortestErrata,
-            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-            r.SetName, r.SetCode, r.SetRarity,
-            r.BanTcg, r.BanOcg,
-            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+            r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
+            r.Scale, r.LinkVal, r.LinkMarkers,
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ];
 }

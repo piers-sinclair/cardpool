@@ -32,9 +32,13 @@ public class CardPoolExporter
     {
         var allCards = await FetchPlayableCardsAsync();
 
-        var rows = NeedsErrataFetch()
+        var rows = (NeedsErrataFetch()
             ? await BuildShortestErrataRowsAsync(allCards)
-            : BuildLatestErrataRows(allCards);
+            : BuildLatestErrataRows(allCards))
+            .OrderByDescending(r => r.EligibleSince.HasValue)
+            .ThenByDescending(r => r.EligibleSince)
+            .ThenBy(r => r.Name)
+            .ToList();
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, _wordLimit);
@@ -82,6 +86,9 @@ public class CardPoolExporter
             .ToList();
         Console.WriteLine($"{candidates.Count} cards need errata lookup.");
 
+        Console.WriteLine("Fetching set dates from YGOProDeck...");
+        var setDates = await _ygoDeck.FetchSetDatesAsync();
+
         var errataMap = new Dictionary<string, CardErrata>(StringComparer.OrdinalIgnoreCase);
         var processed = 0;
 
@@ -95,7 +102,7 @@ public class CardPoolExporter
 
         async ValueTask ProcessBatchAsync(YgoCard[] batch, CancellationToken _)
         {
-            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList());
+            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList(), setDates);
             int currentProcessed;
             lock (errataMap)
             {
@@ -110,7 +117,7 @@ public class CardPoolExporter
 
     private NormalizedRow BuildRow(YgoCard card, CardErrata? errata)
     {
-        var row = CardNormalizer.Normalize(card, errata, _wordLimit);
+        var row = CardNormalizer.Normalize(card, errata, _wordLimit, _stripMaterials);
         return _stripMaterials ? MaterialStripper.PostprocessRow(row) : row;
     }
 

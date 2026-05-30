@@ -7,30 +7,25 @@ public static class ExcelExporter
     private static readonly Dictionary<string, double> ColumnWidths =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["name"]            = 35,
-            ["type"]            = 28,
-            ["attribute"]       = 12,
-            ["race"]            = 15,
-            ["level"]           =  8,
-            ["atk"]             =  8,
-            ["def"]             =  8,
-            ["word_count"]      = 12,
-            ["shortest_errata"] = 65,
-            ["materials"]       = 35,
-            ["scale"]           =  8,
-            ["linkval"]         = 10,
-            ["linkmarkers"]     = 15,
-            ["archetype"]       = 22,
-            ["set_name"]        = 30,
-            ["set_code"]        = 12,
-            ["set_rarity"]      = 15,
-            ["ban_tcg"]         = 12,
-            ["ban_ocg"]         = 12,
-            ["latest_errata"]   = 50,
-            ["desc"]            = 50,
-            ["id"]              = 10,
-            ["image_url"]       = 12,
-            ["is_eligible"]     = 13,
+            ["name"]               = 35,
+            ["card_type"]          = 28,
+            ["attribute"]          = 12,
+            ["subtype"]            = 15,
+            ["level"]              =  8,
+            ["atk"]                =  8,
+            ["def"]                =  8,
+            ["materials"]          = 35,
+            ["shortest_errata"]    = 65,
+            ["word_count"]         = 12,
+            ["archetype"]          = 22,
+            ["scale"]              =  8,
+            ["linkval"]            = 10,
+            ["linkmarkers"]        = 15,
+            ["eligible_since"]     = 15,
+            ["latest_errata"]      = 50,
+            ["id"]                 = 10,
+            ["image_url"]          = 12,
+            ["is_eligible"]        = 13,
         };
 
     private const double DataRowHeight = 28;
@@ -155,18 +150,14 @@ public static class ExcelExporter
         includeMaterials
         ? [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.WordCount, r.Materials, r.ShortestErrata,
-            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-            r.SetName, r.SetCode, r.SetRarity,
-            r.BanTcg, r.BanOcg,
-            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+            r.Materials, r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
+            r.Scale, r.LinkVal, r.LinkMarkers,
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ]
         : [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.WordCount, r.ShortestErrata,
-            r.Scale, r.LinkVal, r.LinkMarkers, r.Archetype,
-            r.SetName, r.SetCode, r.SetRarity,
-            r.BanTcg, r.BanOcg,
-            r.LatestErrata, r.Desc, r.Id, r.ImageUrl, r.IsEligible
+            r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
+            r.Scale, r.LinkVal, r.LinkMarkers,
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ];
 }

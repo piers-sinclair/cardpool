@@ -32,7 +32,8 @@ public sealed class YugipediaClient : IDisposable
     }
 
     public async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
-        IReadOnlyList<string> cardNames)
+        IReadOnlyList<string> cardNames,
+        IReadOnlyDictionary<string, string>? setDates = null)
     {
         var json = await ThrottledGetWithRetryAsync(BuildErrataQueryUrl(cardNames));
         var result = new Dictionary<string, CardErrata>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
@@ -45,7 +46,13 @@ public sealed class YugipediaClient : IDisposable
         foreach (var name in cardNames)
         {
             if (pageMap.TryGetValue(name, out var lores))
-                result[name] = new(lores.MinBy(WordCounter.CountWords)!, lores[^1]);
+            {
+                var shortest = lores.MinBy(e => WordCounter.CountWords(e.Text))!;
+                var allLores = lores
+                    .Select(l => new ErrataLore(l.Text, l.SetName is not null ? setDates?.GetValueOrDefault(l.SetName) : null))
+                    .ToList();
+                result[name] = new(shortest.Text, lores[^1].Text, allLores);
+            }
         }
 
         return result;
@@ -66,9 +73,9 @@ public sealed class YugipediaClient : IDisposable
     private static string BuildHtmlUrl(string cardName) =>
         $"{ApiUrl}?action=parse&page={Uri.EscapeDataString($"{ErrataPagePrefix}{cardName}")}&prop=text&format=json";
 
-    private static async Task<Dictionary<string, List<string>>> ParsePageMapAsync(JsonObject pages)
+    private static async Task<Dictionary<string, List<LoreEntry>>> ParsePageMapAsync(JsonObject pages)
     {
-        var pageMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        var pageMap = new Dictionary<string, List<LoreEntry>>(StringComparer.OrdinalIgnoreCase);
         foreach (var (_, page) in pages)
         {
             if (page is null || page[JsonMissing] is not null) continue;

@@ -18,6 +18,7 @@ var exportCommand = new Command("export",
     "  cpool export --exclude-types pendulum link flip      # also exclude Flip monsters\n" +
     "  cpool export --errata-mode latest                    # use current text only (fast — no Yugipedia fetch)\n" +
     "  cpool export --words -1                              # no word limit — export all cards\n" +
+    "  cpool export --since 2025-01-01                      # also generate release notes for cards eligible since this date\n" +
     "  cpool export --words 30 --output ~/ygo               # ≤30 words, custom output dir");
 
 var wordsOption = new Option<int>("--words")

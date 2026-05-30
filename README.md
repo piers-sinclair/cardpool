@@ -74,25 +74,28 @@ dotnet publish src/CardPool.Cli -p:PublishProfile=linux-x64 -o dist/linux-x64
 
 ### `cpool export`
 
-Export all card data to Excel (`.xlsx`) and CSV. Output files are written to `./output/` by default.
+Export all card data to Excel (`.xlsx`) and CSV. Output files are written to `./output/<date>/` by default.
 
 ```bash
-cpool export                              # default: <=25 words, no-materials, no-link, no-pendulum
-cpool export --words 20                   # <=20 words
-cpool export --no-materials false         # include full material text in word count
-cpool export --extra-deck all             # include all Extra Deck types (including Link)
-cpool export --extra-deck none            # main-deck cards only
-cpool export --extra-deck fusion synchro  # Fusion + Synchro only
-cpool export --no-pendulum false          # include Pendulum monsters
-cpool export --words 30 --output ~/ygo    # <=30 words, custom output dir
+cpool export                                         # default: <=25 words, strip-materials, exclude pendulum link
+cpool export --words 20                              # <=20 words
+cpool export --strip-materials false                 # include full material text in word count
+cpool export --exclude-types none                    # include all card types
+cpool export --exclude-types fusion synchro xyz link # main-deck cards only
+cpool export --exclude-types pendulum link flip      # also exclude Flip monsters
+cpool export --errata-mode latest                    # use current text only (fast — no Yugipedia fetch)
+cpool export --words -1                              # no word limit — export all cards
+cpool export --since 2025-01-01                      # also generate release notes for cards eligible since this date
+cpool export --words 30 --output ~/ygo               # <=30 words, custom output dir
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--words` | `25` | Word-count threshold — cards with any printing at or below this limit are included |
-| `--no-materials` | `true` | Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column |
-| `--extra-deck` | `fusion synchro xyz` | Extra Deck types to include — valid values: `all`, `none`, `fusion`, `synchro`, `xyz`, `link` (repeatable) |
-| `--no-pendulum` | `true` | Exclude Pendulum monsters from output |
+| `--words` | `25` | Word-count threshold — cards with any printing at or below this limit are included. Use `-1` for no limit |
+| `--strip-materials` | `true` | Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column |
+| `--exclude-types` | `pendulum link` | Exclude cards whose type contains any of these fragments (case-insensitive, repeatable). Use `none` to include all types |
+| `--errata-mode` | `shortest` | Which text version to evaluate: `shortest` = any historical printing (fetches Yugipedia), `latest` = current printing only (fast, no Yugipedia fetch) |
+| `--since` | _(none)_ | Generate a release notes file alongside the export showing cards that became eligible on or after this date (`YYYY-MM-DD`) |
 | `--output` | `./output` | Directory to write output files to |
 
 ### `cpool inspect`
@@ -124,6 +127,8 @@ cpool --version   # show installed version
 ```bash
 dotnet run --project src/CardPool.Cli -- export
 dotnet run --project src/CardPool.Cli -- export --words 25
+dotnet run --project src/CardPool.Cli -- export --errata-mode latest
+dotnet run --project src/CardPool.Cli -- export --since 2025-01-01
 dotnet run --project src/CardPool.Cli -- inspect "Raiza the Storm Monarch"
 ```
 
@@ -140,16 +145,18 @@ dotnet test tests/CardPool.Tests
 ```mermaid
 flowchart TD
     CLI["Program.cs\n(System.CommandLine)"]
-    EP["ExportPipeline"]
+    EP["CardPoolExporter"]
     YGO["YgoProDeckClient\n(HTTP)"]
     YUG["YugipediaClient\n(HTTP + rate limit)"]
     CN["CardNormalizer"]
-    MS["MaterialStripper\n(--no-materials)"]
+    MS["MaterialStripper\n(--strip-materials)"]
     WC["WordCounter"]
     WTP["WikitextParser\n(AngleSharp)"]
-    XL["ExcelExporter\n(ClosedXML)"]
-    CSV["CsvExporter\n(CsvHelper)"]
-    OUT[("output/*.xlsx\noutput/*.csv")]
+    XL["CardPoolExcelExporter\n(ClosedXML)"]
+    CSV["CardPoolCsvExporter\n(CsvHelper)"]
+    RNX["ReleaseNotesExcelExporter\n(--since)"]
+    RNC["ReleaseNotesCsvExporter\n(--since)"]
+    OUT[("output/<date>/*.xlsx\noutput/<date>/*.csv")]
     HES["HtmlErrataScraper\n(AngleSharp)"]
 
     CLI -->|export| EP
@@ -158,12 +165,16 @@ flowchart TD
     YUG --> WTP
     EP --> CN
     CN --> WC
-    EP -->|"--no-materials"| MS
+    EP -->|"--strip-materials"| MS
     MS --> WC
     EP --> XL
     EP --> CSV
+    EP --> RNX
+    EP --> RNC
     XL --> OUT
     CSV --> OUT
+    RNX --> OUT
+    RNC --> OUT
     CLI -->|inspect| YGO
     CLI -->|inspect| YUG
     YUG -->|inspect| HES
@@ -175,19 +186,27 @@ flowchart TD
 
 | Column | Description |
 |--------|-------------|
-| `id`, `name`, `type`, `race`, `attribute` | Core card identity |
-| `level`, `atk`, `def`, `scale`, `linkval`, `linkmarkers` | Stats |
+| `name` | Card name |
+| `card_type` | Full card type string (e.g. "Effect Monster", "Spell Card") |
+| `attribute` | Attribute (DARK, LIGHT, etc.) — monsters only |
+| `subtype` | Monster subtype / race (e.g. "Warrior", "Spellcaster") |
+| `level` | Level or Rank — monsters only |
+| `atk`, `def` | Attack / Defence |
+| `scale` | Pendulum Scale — Pendulum monsters only |
+| `linkval` | Link Rating — Link monsters only |
+| `linkmarkers` | Comma-separated Link Markers — Link monsters only |
 | `archetype` | Card archetype |
-| `desc` | Current oracle text (from YGOProDeck) |
-| `shortest_errata` | The errata version with the fewest words; falls back to `desc` if no Yugipedia page exists |
-| `latest_errata` | The most recent errata version; falls back to `desc` |
+| `materials` | Stripped material requirement text (only present when `--strip-materials true`) |
+| `shortest_errata` | The errata version with the fewest words; falls back to current oracle text if no Yugipedia page exists |
+| `latest_errata` | The most recent errata version; falls back to current oracle text |
+| `eligible_since` | Earliest date (`YYYY-MM-DD`) any errata version of this card met the word threshold |
 | `word_count` | Effective word count of `shortest_errata`, applying game counting rules |
 | `is_eligible` | `true` if `word_count` ≤ threshold |
-| `set_name`, `set_code`, `set_rarity` | First card set from YGOProDeck |
-| `ban_tcg`, `ban_ocg` | Current banlist status |
+| `id` | YGOProDeck numeric card ID |
 | `image_url` | Card artwork URL |
 
-The Excel workbook has two sheets: `<=N Words` and `>N Words` (where N is the threshold).
+The main export workbook has two sheets: `<=N Words` (eligible cards) and `>N Words` (ineligible cards).
+When `--since` is provided, a separate release notes workbook is also produced containing only cards whose `eligible_since` date falls on or after the given date.
 
 ---
 

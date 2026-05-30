@@ -19,15 +19,9 @@ public static class ExportPipeline
 
         var allCards = await FetchPlayableCardsAsync(ygoDeck);
 
-        Dictionary<string, CardErrata> errataMap = NeedsErrataFetch(latestOnly, wordLimit)
-            ? await FetchErrataAsync(yugipedia, allCards, wordLimit)
-            : new(StringComparer.OrdinalIgnoreCase);
-
-        Console.WriteLine("Normalizing...");
-        var rows = allCards
-            .Select(card => BuildRow(card, errataMap.GetValueOrDefault(card.Name), wordLimit, stripMaterials))
-            .Where(row => IsTypeIncluded(row.Type, excludeTypes))
-            .ToList();
+        var rows = NeedsErrataFetch(latestOnly, wordLimit)
+            ? await BuildShortestErrataRowsAsync(yugipedia, allCards, wordLimit, stripMaterials, excludeTypes)
+            : BuildCurrentTextRows(allCards, wordLimit, stripMaterials, excludeTypes);
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, wordLimit);
@@ -39,6 +33,34 @@ public static class ExportPipeline
 
     private static bool NeedsErrataFetch(bool latestOnly, int wordLimit) =>
         !latestOnly && wordLimit != int.MaxValue;
+
+    private static async Task<List<NormalizedRow>> BuildShortestErrataRowsAsync(
+        YugipediaClient yugipedia,
+        List<YgoCard> cards,
+        int wordLimit,
+        bool stripMaterials,
+        string[]? excludeTypes)
+    {
+        var errataMap = await FetchErrataAsync(yugipedia, cards, wordLimit);
+        Console.WriteLine("Normalizing...");
+        return cards
+            .Select(card => BuildRow(card, errataMap.GetValueOrDefault(card.Name), wordLimit, stripMaterials))
+            .Where(row => IsTypeIncluded(row.Type, excludeTypes))
+            .ToList();
+    }
+
+    private static List<NormalizedRow> BuildCurrentTextRows(
+        List<YgoCard> cards,
+        int wordLimit,
+        bool stripMaterials,
+        string[]? excludeTypes)
+    {
+        Console.WriteLine("Normalizing...");
+        return cards
+            .Select(card => BuildRow(card, default, wordLimit, stripMaterials))
+            .Where(row => IsTypeIncluded(row.Type, excludeTypes))
+            .ToList();
+    }
 
     private static bool IsTypeIncluded(string cardType, string[]? excludeTypes) =>
         excludeTypes is null or { Length: 0 }

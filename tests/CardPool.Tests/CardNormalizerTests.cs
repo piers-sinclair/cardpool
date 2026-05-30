@@ -5,8 +5,9 @@ public class CardNormalizerTests
     private static YgoCard MakeCard(string type, string desc, string? tcgDate = null) =>
         new(Id: 1, Name: "Test", Type: type, Race: null, Attribute: null,
             Level: null, Atk: null, Def: null, Scale: null, LinkVal: null,
-            LinkMarkers: null, Archetype: null, Desc: desc, TcgDate: tcgDate,
-            CardSets: null, BanlistInfo: null, CardImages: null);
+            LinkMarkers: null, Archetype: null, Desc: desc,
+            CardSets: null, BanlistInfo: null, CardImages: null,
+            MiscInfo: tcgDate is null ? null : [new MiscInfo(tcgDate)]);
 
     [Fact]
     public void Normalize_PendulumTunerEffectMonstersOnlyErrata_FallsBackToDesc()

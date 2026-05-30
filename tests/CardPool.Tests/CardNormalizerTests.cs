@@ -85,7 +85,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_NoErrataPage_TcgDateSet_LatestErrataDateEqualsTcgDate()
+    public void Normalize_NoErrataPageWithTcgDate_LatestErrataDateEqualsTcgDate()
     {
         var card = MakeCard("Effect Monster", "text", tcgDate: "2002-03-08");
 
@@ -95,7 +95,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_NoErrataPage_NullTcgDate_LatestErrataDateIsNull()
+    public void Normalize_NoErrataPageNullTcgDate_LatestErrataDateIsNull()
     {
         var card = MakeCard("Effect Monster", "text", tcgDate: null);
 
@@ -115,7 +115,7 @@ public class CardNormalizerTests
     }
 
     [Fact]
-    public void Normalize_ErrataNoYugipediaDate_LatestErrataDateFallsBackToTcgDate()
+    public void Normalize_ErrataNoYugipediaDate_LatestErrataDateEqualsTcgDate()
     {
         var card = MakeCard("Effect Monster", "text", tcgDate: "2002-03-08");
 

@@ -71,8 +71,13 @@ exportCommand.SetAction(async parseResult =>
     var wordsPart = words == 25 ? "" : words == -1 ? "_all_words" : $"_{words}words";
     var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
+    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+    using var ygoDeck = new YgoProDeckClient(http);
+    using var yugipedia = new YugipediaClient(http);
+    var pipeline = new ExportPipeline(ygoDeck, yugipedia);
+
     Directory.CreateDirectory(outputDirectory);
-    await ExportPipeline.RunAsync(
+    await pipeline.RunAsync(
         $"{outputDirectory}/{suffix}.xlsx",
         $"{outputDirectory}/{suffix}.csv",
         wordLimit: wordLimit,

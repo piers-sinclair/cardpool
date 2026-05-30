@@ -156,4 +156,82 @@ public class CardNormalizerTests
 
         row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
     }
+
+    [Fact]
+    public void Normalize_NullTcgDateWithMatchingSetDates_EligibleSinceFromEarliestSet()
+    {
+        var card = new YgoCard(Id: 1, Name: "Test", Type: "Normal Monster", Race: null, Attribute: null,
+            Level: null, Atk: null, Def: null, Scale: null, LinkVal: null, LinkMarkers: null,
+            Archetype: null, Desc: "flavour text",
+            CardSets: [new CardSet("Legend of Blue Eyes White Dragon", "LOB", "Common")],
+            BanlistInfo: null, CardImages: null, MiscInfo: null);
+        var setDates = new Dictionary<string, string>
+        {
+            ["Legend of Blue Eyes White Dragon"] = "2002-03-08"
+        };
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20, setDates: setDates);
+
+        row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
+    }
+
+    [Fact]
+    public void Normalize_NullTcgDateMultipleSets_EligibleSinceFromEarliestSet()
+    {
+        var card = new YgoCard(Id: 1, Name: "Test", Type: "Normal Monster", Race: null, Attribute: null,
+            Level: null, Atk: null, Def: null, Scale: null, LinkVal: null, LinkMarkers: null,
+            Archetype: null, Desc: "flavour text",
+            CardSets:
+            [
+                new CardSet("Dark Beginning 1", "DB1", "Common"),
+                new CardSet("Legend of Blue Eyes White Dragon", "LOB", "Common")
+            ],
+            BanlistInfo: null, CardImages: null, MiscInfo: null);
+        var setDates = new Dictionary<string, string>
+        {
+            ["Dark Beginning 1"] = "2004-11-01",
+            ["Legend of Blue Eyes White Dragon"] = "2002-03-08"
+        };
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20, setDates: setDates);
+
+        row.EligibleSince.ShouldBe(new DateOnly(2002, 3, 8));
+    }
+
+    [Fact]
+    public void Normalize_NullTcgDateNoMatchingSetDates_EligibleSinceIsNull()
+    {
+        var card = new YgoCard(Id: 1, Name: "Test", Type: "Normal Monster", Race: null, Attribute: null,
+            Level: null, Atk: null, Def: null, Scale: null, LinkVal: null, LinkMarkers: null,
+            Archetype: null, Desc: "flavour text",
+            CardSets: [new CardSet("UnknownSet", "UNK", "Common")],
+            BanlistInfo: null, CardImages: null, MiscInfo: null);
+        var setDates = new Dictionary<string, string>
+        {
+            ["Legend of Blue Eyes White Dragon"] = "2002-03-08"
+        };
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20, setDates: setDates);
+
+        row.EligibleSince.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Normalize_ErrataLoreNoDateNullTcgDateWithSetDates_EligibleSinceFromSet()
+    {
+        var card = new YgoCard(Id: 1, Name: "Test", Type: "Effect Monster", Race: null, Attribute: null,
+            Level: null, Atk: null, Def: null, Scale: null, LinkVal: null, LinkMarkers: null,
+            Archetype: null, Desc: string.Join(" ", Enumerable.Repeat("word", 30)),
+            CardSets: [new CardSet("Set A", "SA", "Common")],
+            BanlistInfo: null, CardImages: null, MiscInfo: null);
+        var setDates = new Dictionary<string, string>
+        {
+            ["Set A"] = "2003-07-10"
+        };
+        var errata = new CardErrata("short", "short", [new ErrataLore("short", null)]);
+
+        var row = CardNormalizer.Normalize(card, errata, wordLimit: 20, setDates: setDates);
+
+        row.EligibleSince.ShouldBe(new DateOnly(2003, 7, 10));
+    }
 }

@@ -16,7 +16,8 @@ public static class CardNormalizer
         YgoCard card,
         CardErrata? errata,
         int wordLimit,
-        bool stripMaterials = false)
+        bool stripMaterials = false,
+        IReadOnlyDictionary<string, string>? setDates = null)
     {
         var resolved = card.GetCardErrata(errata);
 
@@ -39,26 +40,36 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
-            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials),
+            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit, stripMaterials, setDates),
             WordLimit = wordLimit,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
     }
 
-    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials)
+    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit, bool stripMaterials, IReadOnlyDictionary<string, string>? setDates)
     {
         if (errata is null)
-            return ParseDate(card.TcgDate);
+            return ParseDate(card.TcgDate) ?? EarliestSetDate(card, setDates);
 
         var firstEligibleLore = errata.AllLores
             .FirstOrDefault(l => CountWords(l.Text, card.Type, stripMaterials) <= wordLimit);
 
         if (firstEligibleLore is not null)
-            return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
+            return ParseDate(firstEligibleLore.Date ?? card.TcgDate) ?? EarliestSetDate(card, setDates);
 
         return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
-            ? ParseDate(card.TcgDate)
+            ? ParseDate(card.TcgDate) ?? EarliestSetDate(card, setDates)
             : null;
+    }
+
+    private static DateOnly? EarliestSetDate(YgoCard card, IReadOnlyDictionary<string, string>? setDates)
+    {
+        if (card.CardSets is null || setDates is null) return null;
+        var dates = card.CardSets
+            .Select(s => ParseDate(setDates.GetValueOrDefault(s.SetName)))
+            .OfType<DateOnly>()
+            .ToList();
+        return dates.Count > 0 ? dates.Min() : null;
     }
 
     private static int CountWords(string text, string type, bool stripMaterials)

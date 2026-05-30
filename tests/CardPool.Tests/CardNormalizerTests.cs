@@ -2,10 +2,10 @@ namespace CardPool.Tests;
 
 public class CardNormalizerTests
 {
-    private static YgoCard MakeCard(string type, string desc) =>
+    private static YgoCard MakeCard(string type, string desc, string? tcgDate = null) =>
         new(Id: 1, Name: "Test", Type: type, Race: null, Attribute: null,
             Level: null, Atk: null, Def: null, Scale: null, LinkVal: null,
-            LinkMarkers: null, Archetype: null, Desc: desc, TcgDate: null,
+            LinkMarkers: null, Archetype: null, Desc: desc, TcgDate: tcgDate,
             CardSets: null, BanlistInfo: null, CardImages: null);
 
     [Fact]
@@ -82,5 +82,45 @@ public class CardNormalizerTests
 
         row.WordCount.ShouldBe(WordCounter.CountWords(shortErrata));
         row.IsEligible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Normalize_NoErrataPage_TcgDateSet_LatestErrataDateEqualsTcgDate()
+    {
+        var card = MakeCard("Effect Monster", "text", tcgDate: "2002-03-08");
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
+
+        row.LatestErrataDate.ShouldBe(new DateOnly(2002, 3, 8));
+    }
+
+    [Fact]
+    public void Normalize_NoErrataPage_NullTcgDate_LatestErrataDateIsNull()
+    {
+        var card = MakeCard("Effect Monster", "text", tcgDate: null);
+
+        var row = CardNormalizer.Normalize(card, errata: null, wordLimit: 20);
+
+        row.LatestErrataDate.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Normalize_ErrataWithYugipediaDate_LatestErrataDateFromYugipedia()
+    {
+        var card = MakeCard("Effect Monster", "text", tcgDate: "2002-03-08");
+
+        var row = CardNormalizer.Normalize(card, new CardErrata("text", "text", "September 13, 2003"), wordLimit: 20);
+
+        row.LatestErrataDate.ShouldBe(new DateOnly(2003, 9, 13));
+    }
+
+    [Fact]
+    public void Normalize_ErrataNoYugipediaDate_LatestErrataDateFallsBackToTcgDate()
+    {
+        var card = MakeCard("Effect Monster", "text", tcgDate: "2002-03-08");
+
+        var row = CardNormalizer.Normalize(card, new CardErrata("text", "text", null), wordLimit: 20);
+
+        row.LatestErrataDate.ShouldBe(new DateOnly(2002, 3, 8));
     }
 }

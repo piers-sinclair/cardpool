@@ -83,10 +83,28 @@ public class CsvExporterTests
     }
 
     [Fact]
-    public void Export_ColumnHeaders_LatestErrataDatePresent()
+    public void Export_ColumnHeaders_EligibleSincePresent()
     {
         var (header, _) = ExportAndParse([MakeRow()]);
-        Array.IndexOf(header, "latest_errata_date").ShouldNotBe(-1);
+        Array.IndexOf(header, "eligible_since").ShouldNotBe(-1);
+    }
+
+    [Fact]
+    public void Export_ColumnHeaders_NoLatestErrataDateColumn()
+    {
+        var (header, _) = ExportAndParse([MakeRow()]);
+        Array.IndexOf(header, "latest_errata_date").ShouldBe(-1);
+    }
+
+    [Fact]
+    public void Export_ColumnHeaders_EligibleSinceBeforeWordCount()
+    {
+        var (header, _) = ExportAndParse([MakeRow()]);
+        var eligibleIdx = Array.IndexOf(header, "eligible_since");
+        var wordCountIdx = Array.IndexOf(header, "word_count");
+        eligibleIdx.ShouldNotBe(-1);
+        wordCountIdx.ShouldNotBe(-1);
+        eligibleIdx.ShouldBeLessThan(wordCountIdx);
     }
 
     [Fact]
@@ -101,20 +119,20 @@ public class CsvExporterTests
     }
 
     [Fact]
-    public void Export_LatestErrataDateSet_FormattedAsIso()
+    public void Export_EligibleSinceSet_FormattedAsIso()
     {
         var row = MakeRow();
-        row.LatestErrataDate = new DateOnly(2002, 3, 8);
+        row.EligibleSince = new DateOnly(2002, 3, 8);
         var (header, data) = ExportAndParse([row]);
-        data[Array.IndexOf(header, "latest_errata_date")].ShouldBe("2002-03-08");
+        data[Array.IndexOf(header, "eligible_since")].ShouldBe("2002-03-08");
     }
 
     [Fact]
-    public void Export_LatestErrataDateNull_EmptyCell()
+    public void Export_EligibleSinceNull_EmptyCell()
     {
         var row = MakeRow();
-        row.LatestErrataDate = null;
+        row.EligibleSince = null;
         var (header, data) = ExportAndParse([row]);
-        data[Array.IndexOf(header, "latest_errata_date")].ShouldBe("");
+        data[Array.IndexOf(header, "eligible_since")].ShouldBe("");
     }
 }

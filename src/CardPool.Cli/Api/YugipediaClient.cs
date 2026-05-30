@@ -48,11 +48,10 @@ public sealed class YugipediaClient : IDisposable
             if (pageMap.TryGetValue(name, out var lores))
             {
                 var shortest = lores.MinBy(e => WordCounter.CountWords(e.Text))!;
-                var latest = lores[^1];
-                var latestDate = latest.SetName is not null
-                    ? setDates?.GetValueOrDefault(latest.SetName)
-                    : null;
-                result[name] = new(shortest.Text, latest.Text, latestDate);
+                var allLores = lores
+                    .Select(l => new ErrataLore(l.Text, l.SetName is not null ? setDates?.GetValueOrDefault(l.SetName) : null))
+                    .ToList();
+                result[name] = new(shortest.Text, lores[^1].Text, allLores);
             }
         }
 

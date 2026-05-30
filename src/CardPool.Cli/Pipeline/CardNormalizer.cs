@@ -38,10 +38,27 @@ public static class CardNormalizer
             Desc = card.Desc,
             ShortestErrata = resolved.Shortest,
             LatestErrata = resolved.Latest,
-            LatestErrataDate = ParseDate(resolved.LatestDate),
+            EligibleSince = ComputeEligibleSince(card, errata, resolved, wordLimit),
             WordLimit = wordLimit,
             ImageUrl = card.CardImages?[0].ImageUrl
         };
+    }
+
+    private static DateOnly? ComputeEligibleSince(YgoCard card, CardErrata? errata, ResolvedErrata resolved, int wordLimit)
+    {
+        if (errata is null)
+            return ParseDate(card.TcgDate);
+
+        var firstEligibleLore = errata.AllLores
+            .FirstOrDefault(l => WordCounter.CountEffectiveWords(l.Text, card.Type) <= wordLimit);
+
+        if (firstEligibleLore is not null)
+            return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
+
+        if (WordCounter.CountEffectiveWords(resolved.Shortest, card.Type) <= wordLimit)
+            return ParseDate(card.TcgDate);
+
+        return null;
     }
 
     private static DateOnly? ParseDate(string? raw)

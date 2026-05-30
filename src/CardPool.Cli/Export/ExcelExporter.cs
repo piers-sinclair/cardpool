@@ -21,8 +21,8 @@ public static class ExcelExporter
             ["scale"]              =  8,
             ["linkval"]            = 10,
             ["linkmarkers"]        = 15,
+            ["eligible_since"]     = 15,
             ["latest_errata"]      = 50,
-            ["latest_errata_date"] = 20,
             ["id"]                 = 10,
             ["image_url"]          = 12,
             ["is_eligible"]        = 13,
@@ -150,14 +150,14 @@ public static class ExcelExporter
         includeMaterials
         ? [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.Materials, r.ShortestErrata, r.WordCount, r.Archetype,
+            r.Materials, r.ShortestErrata, r.EligibleSince?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.WordCount, r.Archetype,
             r.Scale, r.LinkVal, r.LinkMarkers,
-            r.LatestErrata, r.LatestErrataDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.Id, r.ImageUrl, r.IsEligible
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ]
         : [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.ShortestErrata, r.WordCount, r.Archetype,
+            r.ShortestErrata, r.EligibleSince?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.WordCount, r.Archetype,
             r.Scale, r.LinkVal, r.LinkMarkers,
-            r.LatestErrata, r.LatestErrataDate?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.Id, r.ImageUrl, r.IsEligible
+            r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ];
 }

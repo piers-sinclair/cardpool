@@ -35,8 +35,8 @@ public class CardPoolExporter
         var rows = (NeedsErrataFetch()
             ? await BuildShortestErrataRowsAsync(allCards)
             : BuildLatestErrataRows(allCards))
-            .OrderByDescending(r => r.LatestErrataDate.HasValue)
-            .ThenByDescending(r => r.LatestErrataDate)
+            .OrderByDescending(r => r.EligibleSince.HasValue)
+            .ThenByDescending(r => r.EligibleSince)
             .ThenBy(r => r.Name)
             .ToList();
 

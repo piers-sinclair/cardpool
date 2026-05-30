@@ -19,10 +19,13 @@ public class NormalizedRow
     public string ShortestErrata { get; set; } = "";
     public string LatestErrata { get; set; } = "";
     public DateOnly? EligibleSince { get; set; }
+    public string? EligibleSinceText => EligibleSince?.ToString(IsoDateFormat, System.Globalization.CultureInfo.InvariantCulture);
     public int WordLimit { get; set; }
     public int WordCount => WordCounter.CountEffectiveWords(ShortestErrata, Type);
     public bool IsEligible => WordCount <= WordLimit;
     public string? ImageUrl { get; set; }
+
+    private const string IsoDateFormat = "yyyy-MM-dd";
 
     public NormalizedRow Clone() => (NormalizedRow)MemberwiseClone();
 

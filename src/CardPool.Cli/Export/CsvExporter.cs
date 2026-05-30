@@ -30,13 +30,13 @@ public static class CsvExporter
         includeMaterials
         ? [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.Materials, r.ShortestErrata, r.EligibleSince?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.WordCount, r.Archetype,
+            r.Materials, r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
             r.Scale, r.LinkVal, r.LinkMarkers,
             r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ]
         : [
             r.Name, r.Type, r.Attribute, r.Race, r.Level, r.Atk, r.Def,
-            r.ShortestErrata, r.EligibleSince?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), r.WordCount, r.Archetype,
+            r.ShortestErrata, r.EligibleSinceText, r.WordCount, r.Archetype,
             r.Scale, r.LinkVal, r.LinkMarkers,
             r.LatestErrata, r.Id, r.ImageUrl, r.IsEligible
           ];

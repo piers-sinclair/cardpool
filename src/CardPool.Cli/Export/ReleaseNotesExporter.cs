@@ -8,41 +8,22 @@ public static class ReleaseNotesExporter
     private static readonly Dictionary<string, double> ColumnWidths =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["name"]           = 35,
-            ["card_type"]      = 28,
-            ["word_count"]     = 12,
+            ["name"]            = 35,
+            ["card_type"]       = 28,
+            ["word_count"]      = 12,
             ["shortest_errata"] = 65,
-            ["eligible_since"] = 18,
-            ["is_eligible"]    = 13,
+            ["eligible_since"]  = 18,
+            ["is_eligible"]     = 13,
         };
 
-    public static void Export(
-        List<NormalizedRow> current,
-        List<PreviousExportRecord> previous,
-        string path)
+    public static void Export(List<NormalizedRow> rows, DateOnly since, string path)
     {
-        var previousById = previous.ToDictionary(p => p.Id);
-
-        var newlyEligible = current
-            .Where(r => r.IsEligible
-                && previousById.ContainsKey(r.Id)
-                && !previousById[r.Id].IsEligible)
-            .ToList();
-
-        var newlyIneligible = current
-            .Where(r => !r.IsEligible
-                && previousById.ContainsKey(r.Id)
-                && previousById[r.Id].IsEligible)
-            .ToList();
-
-        var newCardsEligible = current
-            .Where(r => r.IsEligible && !previousById.ContainsKey(r.Id))
+        var newlyEligible = rows
+            .Where(r => r.IsEligible && r.EligibleSince >= since)
             .ToList();
 
         using var wb = new XLWorkbook();
-        AddSheet(wb, "Newly Eligible", newlyEligible);
-        AddSheet(wb, "Newly Ineligible", newlyIneligible);
-        AddSheet(wb, "New Cards (Eligible)", newCardsEligible);
+        AddSheet(wb, $"Eligible Since {since.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", newlyEligible);
         wb.SaveAs(path);
     }
 
@@ -73,15 +54,7 @@ public static class ReleaseNotesExporter
         for (var rowIdx = 0; rowIdx < rows.Count; rowIdx++)
         {
             var r = rows[rowIdx];
-            object?[] values =
-            [
-                r.Name,
-                r.Type,
-                r.WordCount,
-                r.ShortestErrata,
-                r.EligibleSinceText,
-                r.IsEligible
-            ];
+            object?[] values = [r.Name, r.Type, r.WordCount, r.ShortestErrata, r.EligibleSinceText, r.IsEligible];
             for (var colIdx = 0; colIdx < values.Length; colIdx++)
                 SetCell(ws.Cell(rowIdx + 2, colIdx + 1), values[colIdx]);
         }
@@ -113,28 +86,9 @@ public static class ReleaseNotesExporter
         for (var i = 2; i <= rowCount + 1; i++)
             ws.Row(i).Height = 28;
 
-        CentreAlignColumn(ws, rowCount, "word_count");
-        ApplyEligibilityConditionalFormatting(ws, rowCount);
-    }
-
-    private static void CentreAlignColumn(IXLWorksheet ws, int rowCount, string colName)
-    {
-        var colIdx = Array.IndexOf(Columns, colName) + 1;
-        ws.Range(2, colIdx, rowCount + 1, colIdx).Style
+        var wordCountColIdx = Array.IndexOf(Columns, "word_count") + 1;
+        ws.Range(2, wordCountColIdx, rowCount + 1, wordCountColIdx).Style
             .Alignment.SetHorizontal(XLAlignmentHorizontalValues.Center);
-    }
-
-    private static void ApplyEligibilityConditionalFormatting(IXLWorksheet ws, int rowCount)
-    {
-        var colIdx = Array.IndexOf(Columns, "is_eligible") + 1;
-        var colLetter = ws.Cell(2, colIdx).Address.ColumnLetter;
-        var range = ws.Range(2, colIdx, rowCount + 1, colIdx);
-        range.AddConditionalFormat()
-            .WhenIsTrue($"${colLetter}2=TRUE")
-            .Fill.SetBackgroundColor(XLColor.FromHtml("#C6EFCE"));
-        range.AddConditionalFormat()
-            .WhenIsTrue($"${colLetter}2=FALSE")
-            .Fill.SetBackgroundColor(XLColor.FromHtml("#FFC7CE"));
     }
 
     private static void SetCell(IXLCell cell, object? value)

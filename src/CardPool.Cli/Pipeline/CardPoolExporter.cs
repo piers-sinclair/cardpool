@@ -31,7 +31,7 @@ public class CardPoolExporter
     public async Task ExportAsync(
         string outputXlsx,
         string outputCsv,
-        string? previousCsvPath = null,
+        DateOnly? since = null,
         string? releaseNotesPath = null)
     {
         var allCards = await FetchPlayableCardsAsync();
@@ -48,10 +48,9 @@ public class CardPoolExporter
         ExcelExporter.Export(rows, outputXlsx, _wordLimit);
         CsvExporter.Export(rows, outputCsv);
 
-        if (previousCsvPath is not null && releaseNotesPath is not null)
+        if (since is not null && releaseNotesPath is not null)
         {
-            var previous = PreviousExportReader.Read(previousCsvPath);
-            ReleaseNotesExporter.Export(rows, previous, releaseNotesPath);
+            ReleaseNotesExporter.Export(rows, since.Value, releaseNotesPath);
             Console.WriteLine($"Release notes → {releaseNotesPath}");
         }
 

@@ -2,25 +2,23 @@ namespace CardPool.Tests;
 
 public class ReleaseNotesExporterTests
 {
-    private static NormalizedRow MakeRow(int id, string name, int wordLimit = 25) => new()
+    private static NormalizedRow MakeRow(int id, DateOnly? eligibleSince, int wordLimit = 25) => new()
     {
         Id = id,
-        Name = name,
+        Name = $"Card {id}",
         Type = "Effect Monster",
         ShortestErrata = "Test errata text.",
         LatestErrata = "Test errata text.",
+        EligibleSince = eligibleSince,
         WordLimit = wordLimit,
     };
 
-    private static PreviousExportRecord MakePrev(int id, bool isEligible) =>
-        new() { Id = id, Name = "Card", IsEligible = isEligible };
-
-    private static XLWorkbook ExportAndOpen(List<NormalizedRow> current, List<PreviousExportRecord> previous)
+    private static XLWorkbook ExportAndOpen(List<NormalizedRow> rows, DateOnly since)
     {
         var path = Path.GetTempFileName() + ".xlsx";
         try
         {
-            ReleaseNotesExporter.Export(current, previous, path);
+            ReleaseNotesExporter.Export(rows, since, path);
             return new XLWorkbook(path);
         }
         finally
@@ -29,82 +27,78 @@ public class ReleaseNotesExporterTests
         }
     }
 
+    private static int DataRowCount(XLWorkbook wb) =>
+        wb.Worksheets.First().RangeUsed()?.RowCount() - 1 ?? 0;
+
     [Fact]
-    public void Export_CardBecomesEligible_AppearsInNewlyEligibleSheet()
+    public void Export_EligibleCardWithEligibleSinceOnCutoff_AppearsInSheet()
     {
-        var current = new List<NormalizedRow> { MakeRow(1, "Card A", wordLimit: 25) };
-        var previous = new List<PreviousExportRecord> { MakePrev(1, isEligible: false) };
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow> { MakeRow(1, eligibleSince: since) };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("Newly Eligible").RangeUsed()!.RowCount().ShouldBe(2);
+        DataRowCount(wb).ShouldBe(1);
     }
 
     [Fact]
-    public void Export_CardBecomesIneligible_AppearsInNewlyIneligibleSheet()
+    public void Export_EligibleCardWithEligibleSinceAfterCutoff_AppearsInSheet()
     {
-        var current = new List<NormalizedRow> { MakeRow(1, "Card A", wordLimit: 1) };
-        var previous = new List<PreviousExportRecord> { MakePrev(1, isEligible: true) };
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow> { MakeRow(1, eligibleSince: new DateOnly(2026, 6, 1)) };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("Newly Ineligible").RangeUsed()!.RowCount().ShouldBe(2);
+        DataRowCount(wb).ShouldBe(1);
     }
 
     [Fact]
-    public void Export_NewEligibleCard_AppearsInNewCardsEligibleSheet()
+    public void Export_EligibleCardWithEligibleSinceBeforeCutoff_ExcludedFromSheet()
     {
-        var current = new List<NormalizedRow> { MakeRow(99, "New Card", wordLimit: 25) };
-        var previous = new List<PreviousExportRecord> { MakePrev(1, isEligible: true) };
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow> { MakeRow(1, eligibleSince: new DateOnly(2025, 12, 31)) };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("New Cards (Eligible)").RangeUsed()!.RowCount().ShouldBe(2);
+        DataRowCount(wb).ShouldBe(0);
     }
 
     [Fact]
-    public void Export_UnchangedEligibleCard_DoesNotAppearInDataRows()
+    public void Export_IneligibleCardWithEligibleSinceAfterCutoff_ExcludedFromSheet()
     {
-        var current = new List<NormalizedRow> { MakeRow(1, "Card A", wordLimit: 25) };
-        var previous = new List<PreviousExportRecord> { MakePrev(1, isEligible: true) };
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow> { MakeRow(1, eligibleSince: new DateOnly(2026, 6, 1), wordLimit: 1) };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("Newly Eligible").RangeUsed()!.RowCount().ShouldBe(1);
-        wb.Worksheet("Newly Ineligible").RangeUsed()!.RowCount().ShouldBe(1);
-        wb.Worksheet("New Cards (Eligible)").RangeUsed()!.RowCount().ShouldBe(1);
+        DataRowCount(wb).ShouldBe(0);
     }
 
     [Fact]
-    public void Export_NewIneligibleCard_DoesNotAppearInNewCardsEligibleSheet()
+    public void Export_EligibleCardWithNullEligibleSince_ExcludedFromSheet()
     {
-        var current = new List<NormalizedRow> { MakeRow(99, "New Ineligible", wordLimit: 1) };
-        var previous = new List<PreviousExportRecord> { MakePrev(1, isEligible: true) };
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow> { MakeRow(1, eligibleSince: null) };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("New Cards (Eligible)").RangeUsed()!.RowCount().ShouldBe(1);
+        DataRowCount(wb).ShouldBe(0);
     }
 
     [Fact]
-    public void Export_AllThreeCategoriesPresent_CorrectSheetRowCounts()
+    public void Export_MixedCards_OnlyNewlyEligibleAppear()
     {
-        var current = new List<NormalizedRow>
+        var since = new DateOnly(2026, 1, 1);
+        var rows = new List<NormalizedRow>
         {
-            MakeRow(1, "Became Eligible", wordLimit: 25),
-            MakeRow(2, "Became Ineligible", wordLimit: 1),
-            MakeRow(3, "Totally New", wordLimit: 25),
-        };
-        var previous = new List<PreviousExportRecord>
-        {
-            MakePrev(1, isEligible: false),
-            MakePrev(2, isEligible: true),
+            MakeRow(1, eligibleSince: new DateOnly(2026, 3, 1)),
+            MakeRow(2, eligibleSince: new DateOnly(2025, 6, 1)),
+            MakeRow(3, eligibleSince: new DateOnly(2026, 6, 1)),
+            MakeRow(4, eligibleSince: new DateOnly(2026, 6, 1), wordLimit: 1),
         };
 
-        using var wb = ExportAndOpen(current, previous);
+        using var wb = ExportAndOpen(rows, since);
 
-        wb.Worksheet("Newly Eligible").RangeUsed()!.RowCount().ShouldBe(2);
-        wb.Worksheet("Newly Ineligible").RangeUsed()!.RowCount().ShouldBe(2);
-        wb.Worksheet("New Cards (Eligible)").RangeUsed()!.RowCount().ShouldBe(2);
+        DataRowCount(wb).ShouldBe(2);
     }
 }

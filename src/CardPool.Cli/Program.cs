@@ -54,7 +54,7 @@ var outputOption = new Option<string>("--output")
 
 var sinceOption = new Option<string?>("--since")
 {
-    Description = "Baseline date (YYYY-MM-DD) for release notes. Omit to auto-detect the most recent matching export in the output directory.",
+    Description = "Generate a release notes file alongside the export showing cards that became eligible on or after this date (YYYY-MM-DD).",
     DefaultValueFactory = _ => null
 };
 
@@ -97,37 +97,15 @@ exportCommand.SetAction(async parseResult =>
         excludeTypes: excludeAll ? null : excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);
-    var previousCsvPath = ResolvePreviousCsvPath(outputDirectory, basePrefix, since, today);
-    var releaseNotesPath = previousCsvPath is not null
+    var sinceDate = since is not null && DateOnly.TryParse(since, CultureInfo.InvariantCulture, out var d) ? d : (DateOnly?)null;
+    var releaseNotesPath = sinceDate is not null
         ? Path.Combine(outputDirectory, $"{basePrefix}_release_notes_{today}.xlsx")
         : null;
     await exporter.ExportAsync(
         $"{outputDirectory}/{exportSuffix}.xlsx",
         $"{outputDirectory}/{exportSuffix}.csv",
-        previousCsvPath,
+        sinceDate,
         releaseNotesPath);
-
-    static string? ResolvePreviousCsvPath(string outputDir, string prefix, string? since, string today)
-    {
-        var pattern = new Regex(
-            $@"^{Regex.Escape(prefix)}_export_(\d{{4}}-\d{{2}}-\d{{2}})\.csv$",
-            RegexOptions.IgnoreCase);
-
-        if (since is not null)
-        {
-            var explicitPath = Path.Combine(outputDir, $"{prefix}_export_{since}.csv");
-            return File.Exists(explicitPath) ? explicitPath : null;
-        }
-
-        return Directory.EnumerateFiles(outputDir, "*.csv")
-            .Select(p => (Path: p, Match: pattern.Match(Path.GetFileName(p))))
-            .Where(x => x.Match.Success)
-            .Select(x => (x.Path, Date: x.Match.Groups[1].Value))
-            .Where(x => x.Date != today)
-            .OrderByDescending(x => x.Date)
-            .Select(x => x.Path)
-            .FirstOrDefault();
-    }
 });
 
 rootCommand.Add(exportCommand);

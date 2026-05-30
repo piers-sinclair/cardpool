@@ -4,6 +4,8 @@ namespace CardPool.Cli.Pipeline;
 
 public static class CardNormalizer
 {
+    private const string YugipediaDateFormat = "MMMM d, yyyy";
+
     public static bool NeedsErrataLookup(YgoCard card, int wordLimit)
     {
         if (card.Type.IsPureNormalMonster())
@@ -56,9 +58,6 @@ public static class CardNormalizer
         if (firstEligibleLore is not null)
             return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
 
-        // firstEligibleLore is only null when resolved.Shortest is card.Desc due to the
-        // pendulum fallback — that text is not in AllLores. Use tcg_date if it's eligible,
-        // null if the card is ineligible entirely.
         return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
             ? ParseDate(card.TcgDate)
             : null;
@@ -74,7 +73,7 @@ public static class CardNormalizer
     {
         if (raw is null) return null;
         var trimmed = raw.Trim();
-        if (DateOnly.TryParseExact(trimmed, "MMMM d, yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
+        if (DateOnly.TryParseExact(trimmed, YugipediaDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var d))
             return d;
         if (DateOnly.TryParse(trimmed, CultureInfo.InvariantCulture, DateTimeStyles.None, out d))
             return d;

@@ -8,13 +8,16 @@ public static class ReleaseNotesExcelExporter
             .Where(r => r.IsEligible && r.EligibleSince >= since)
             .ToList();
 
+        var hasMaterials = newlyEligible.Any(r => r.Materials != null);
+        var cols = hasMaterials ? NormalizedRow.OutputColumnsWithMaterials : NormalizedRow.OutputColumns;
+
         using var wb = new XLWorkbook();
-        XlsxSheetWriter.AddSheet(
+        ExcelFormatter.AddSheet(
             wb,
             $"Eligible Since {since.ToString(AppConstants.IsoDateFormat, CultureInfo.InvariantCulture)}",
-            NormalizedRow.ReleaseNotesColumns,
+            cols,
             newlyEligible,
-            r => r.GetReleaseNotesValues());
+            r => r.GetValues(hasMaterials));
         wb.SaveAs(path);
     }
 }

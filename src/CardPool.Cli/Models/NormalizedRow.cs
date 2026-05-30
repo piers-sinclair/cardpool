@@ -36,12 +36,6 @@ public class NormalizedRow
            Scale, LinkVal, LinkMarkers,
            LatestErrata, Id, ImageUrl, IsEligible];
 
-    public object?[] GetReleaseNotesValues() =>
-        [Name, Type, WordCount, ShortestErrata, EligibleSinceText, IsEligible];
-
-    public static readonly string[] ReleaseNotesColumns =
-        ["name", "card_type", "word_count", "shortest_errata", "eligible_since", "is_eligible"];
-
     public NormalizedRow Clone() => (NormalizedRow)MemberwiseClone();
 
     public static readonly string[] OutputColumns =

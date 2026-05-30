@@ -14,6 +14,6 @@ public static class CardPoolExcelExporter
     {
         var hasMaterials = rows.Any(r => r.Materials != null);
         var cols = hasMaterials ? NormalizedRow.OutputColumnsWithMaterials : NormalizedRow.OutputColumns;
-        XlsxSheetWriter.AddSheet(wb, sheetName, cols, rows, r => r.GetValues(hasMaterials));
+        ExcelFormatter.AddSheet(wb, sheetName, cols, rows, r => r.GetValues(hasMaterials));
     }
 }

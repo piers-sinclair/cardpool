@@ -1,6 +1,6 @@
 namespace CardPool.Cli.Export;
 
-internal static class XlsxSheetWriter
+internal static class ExcelFormatter
 {
     private static readonly Dictionary<string, double> ColumnWidths =
         new(StringComparer.OrdinalIgnoreCase)

@@ -14,6 +14,7 @@ public record YgoCard(
     [property: JsonPropertyName("linkmarkers")] string[]? LinkMarkers,
     [property: JsonPropertyName("archetype")] string? Archetype,
     [property: JsonPropertyName("desc")] string Desc,
+    [property: JsonPropertyName("tcg_date")] string? TcgDate,
     [property: JsonPropertyName("card_sets")] CardSet[]? CardSets,
     [property: JsonPropertyName("banlist_info")] BanlistInfo? BanlistInfo,
     [property: JsonPropertyName("card_images")] CardImage[]? CardImages

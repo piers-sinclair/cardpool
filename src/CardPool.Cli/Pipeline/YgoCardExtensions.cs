@@ -13,7 +13,7 @@ internal static partial class YgoCardExtensions
     internal static ResolvedErrata GetCardErrata(this YgoCard card, CardErrata? errata)
     {
         if (errata is null)
-            return new ResolvedErrata(card.Desc, card.Desc, null);
+            return new ResolvedErrata(card.Desc, card.Desc, card.TcgDate);
 
         var resolvedShortest = errata.Shortest;
 
@@ -28,6 +28,6 @@ internal static partial class YgoCardExtensions
             }
         }
 
-        return new ResolvedErrata(resolvedShortest, errata.Latest, errata.LatestDate);
+        return new ResolvedErrata(resolvedShortest, errata.Latest, errata.LatestDate ?? card.TcgDate);
     }
 }

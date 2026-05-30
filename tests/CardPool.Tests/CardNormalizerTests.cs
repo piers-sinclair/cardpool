@@ -5,7 +5,7 @@ public class CardNormalizerTests
     private static YgoCard MakeCard(string type, string desc) =>
         new(Id: 1, Name: "Test", Type: type, Race: null, Attribute: null,
             Level: null, Atk: null, Def: null, Scale: null, LinkVal: null,
-            LinkMarkers: null, Archetype: null, Desc: desc,
+            LinkMarkers: null, Archetype: null, Desc: desc, TcgDate: null,
             CardSets: null, BanlistInfo: null, CardImages: null);
 
     [Fact]

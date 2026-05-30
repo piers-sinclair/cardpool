@@ -1,23 +1,23 @@
 namespace CardPool.Cli.Pipeline;
 
-public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
+public class CardPoolExporter(
+    YgoProDeckClient ygoDeck,
+    YugipediaClient yugipedia,
+    int wordLimit,
+    bool latestOnly,
+    bool stripMaterials,
+    string[]? excludeTypes)
 {
     private const int BatchSize = 50;
     private const int MaxWorkers = 20;
 
-    public async Task RunAsync(
-        string outputXlsx,
-        string outputCsv,
-        int wordLimit = 20,
-        bool latestOnly = false,
-        bool stripMaterials = false,
-        string[]? excludeTypes = null)
+    public async Task ExportAsync(string outputXlsx, string outputCsv)
     {
         var allCards = await FetchPlayableCardsAsync();
 
-        var rows = NeedsErrataFetch(latestOnly, wordLimit)
-            ? await BuildShortestErrataRowsAsync(allCards, wordLimit, stripMaterials, excludeTypes)
-            : BuildLatestErrataRows(allCards, wordLimit, stripMaterials, excludeTypes);
+        var rows = NeedsErrataFetch()
+            ? await BuildShortestErrataRowsAsync(allCards)
+            : BuildLatestErrataRows(allCards);
 
         Directory.CreateDirectory(Path.GetDirectoryName(outputXlsx) ?? ".");
         ExcelExporter.Export(rows, outputXlsx, wordLimit);
@@ -26,6 +26,8 @@ public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
         var eligible = rows.Count(r => r.IsEligible);
         Console.WriteLine($"Done. {eligible} eligible / {rows.Count} total → {outputXlsx}");
     }
+
+    private bool NeedsErrataFetch() => !latestOnly && wordLimit != int.MaxValue;
 
     private async Task<List<YgoCard>> FetchPlayableCardsAsync()
     {
@@ -37,23 +39,26 @@ public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
         return cards;
     }
 
-    private async Task<List<NormalizedRow>> BuildShortestErrataRowsAsync(
-        List<YgoCard> cards,
-        int wordLimit,
-        bool stripMaterials,
-        string[]? excludeTypes)
+    private async Task<List<NormalizedRow>> BuildShortestErrataRowsAsync(List<YgoCard> cards)
     {
-        var errataMap = await FetchErrataAsync(cards, wordLimit);
+        var errataMap = await FetchErrataAsync(cards);
         Console.WriteLine("Normalizing...");
         return cards
-            .Select(card => BuildRow(card, errataMap.GetValueOrDefault(card.Name), wordLimit, stripMaterials))
-            .Where(row => IsTypeIncluded(row.Type, excludeTypes))
+            .Select(card => BuildRow(card, errataMap.GetValueOrDefault(card.Name)))
+            .Where(row => IsTypeIncluded(row.Type))
             .ToList();
     }
 
-    private async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
-        List<YgoCard> cards,
-        int wordLimit)
+    private List<NormalizedRow> BuildLatestErrataRows(List<YgoCard> cards)
+    {
+        Console.WriteLine("Normalizing...");
+        return cards
+            .Select(card => BuildRow(card, default))
+            .Where(row => IsTypeIncluded(row.Type))
+            .ToList();
+    }
+
+    private async Task<Dictionary<string, CardErrata>> FetchErrataAsync(List<YgoCard> cards)
     {
         var candidates = cards
             .Where(c => CardNormalizer.NeedsErrataLookup(c, wordLimit))
@@ -84,30 +89,14 @@ public class ExportPipeline(YgoProDeckClient ygoDeck, YugipediaClient yugipedia)
         return errataMap;
     }
 
-    private static bool NeedsErrataFetch(bool latestOnly, int wordLimit) =>
-        !latestOnly && wordLimit != int.MaxValue;
-
-    private static List<NormalizedRow> BuildLatestErrataRows(
-        List<YgoCard> cards,
-        int wordLimit,
-        bool stripMaterials,
-        string[]? excludeTypes)
-    {
-        Console.WriteLine("Normalizing...");
-        return cards
-            .Select(card => BuildRow(card, default, wordLimit, stripMaterials))
-            .Where(row => IsTypeIncluded(row.Type, excludeTypes))
-            .ToList();
-    }
-
-    private static bool IsTypeIncluded(string cardType, string[]? excludeTypes) =>
-        excludeTypes is null or { Length: 0 }
-        || excludeTypes.ContainsIgnoreCase("none")
-        || excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
-
-    private static NormalizedRow BuildRow(YgoCard card, CardErrata errata, int wordLimit, bool stripMaterials)
+    private NormalizedRow BuildRow(YgoCard card, CardErrata errata)
     {
         var row = CardNormalizer.Normalize(card, errata, wordLimit);
         return stripMaterials ? MaterialStripper.PostprocessRow(row) : row;
     }
+
+    private bool IsTypeIncluded(string cardType) =>
+        excludeTypes is null or { Length: 0 }
+        || excludeTypes.ContainsIgnoreCase("none")
+        || excludeTypes.All(fragment => !cardType.ContainsIgnoreCase(fragment));
 }

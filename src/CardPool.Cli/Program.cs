@@ -72,18 +72,18 @@ exportCommand.SetAction(async parseResult =>
     var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-    using var ygoDeck = new YgoProDeckClient(http);
-    using var yugipedia = new YugipediaClient(http);
-    var pipeline = new ExportPipeline(ygoDeck, yugipedia);
+    var exporter = new CardPoolExporter(
+        new YgoProDeckClient(http),
+        new YugipediaClient(http),
+        wordLimit,
+        latestOnly,
+        stripMaterials: noMaterials,
+        excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);
-    await pipeline.RunAsync(
+    await exporter.ExportAsync(
         $"{outputDirectory}/{suffix}.xlsx",
-        $"{outputDirectory}/{suffix}.csv",
-        wordLimit: wordLimit,
-        latestOnly: latestOnly,
-        stripMaterials: noMaterials,
-        excludeTypes: excludeTypes);
+        $"{outputDirectory}/{suffix}.csv");
 });
 
 rootCommand.Add(exportCommand);

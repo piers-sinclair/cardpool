@@ -39,7 +39,7 @@ public static partial class MaterialStripper
 
     public static string StripMaterialLine(string text) => SplitMaterialLine(text).Effect;
 
-    public static NormalizedRow PostprocessRow(NormalizedRow row, int wordLimit)
+    public static NormalizedRow PostprocessRow(NormalizedRow row)
     {
         if (!row.Type.IsExtraDeckType())
             return row;
@@ -49,10 +49,6 @@ public static partial class MaterialStripper
         row.Desc = split.Effect;
         row.ShortestErrata = StripMaterialLine(row.ShortestErrata);
         row.LatestErrata = StripMaterialLine(row.LatestErrata);
-
-        var wordSource = string.IsNullOrEmpty(row.ShortestErrata) ? row.Desc : row.ShortestErrata;
-        row.WordCount = WordCounter.CountEffectiveWords(wordSource, row.Type);
-        row.IsEligible = row.WordCount <= wordLimit;
 
         return row;
     }

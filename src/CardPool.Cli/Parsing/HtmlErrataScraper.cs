@@ -12,7 +12,7 @@ public static class HtmlErrataScraper
         var doc = await BrowsingContext.OpenAsync(req => req.Content(html));
 
         var englishHeading = doc.QuerySelectorAll("h2, h3")
-            .FirstOrDefault(h => h.TextContent.Trim().Equals(EnglishSectionHeading, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(h => h.TextContent.Trim().EqualsIgnoreCase(EnglishSectionHeading));
 
         IElement? table = null;
         if (englishHeading != null)
@@ -20,7 +20,7 @@ public static class HtmlErrataScraper
             var sibling = englishHeading.NextElementSibling;
             while (sibling != null)
             {
-                if (sibling.TagName.Equals("TABLE", StringComparison.OrdinalIgnoreCase)) { table = sibling; break; }
+                if (sibling.TagName.EqualsIgnoreCase("TABLE")) { table = sibling; break; }
                 sibling = sibling.NextElementSibling;
             }
         }
@@ -36,19 +36,11 @@ public static class HtmlErrataScraper
                 foreach (var del in td.QuerySelectorAll("del").ToList())
                     del.Remove();
 
-                var text = td.TextContent;
-                var normalised = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-                if (!string.IsNullOrEmpty(normalised) && !ContainsJapaneseCharacters(normalised))
+                var normalised = td.TextContent.NormalizeWhitespace();
+                if (!string.IsNullOrEmpty(normalised) && !normalised.ContainsJapanese())
                     results.Add(normalised);
             }
         }
         return results;
     }
-
-    private static bool ContainsJapaneseCharacters(string text) =>
-        text.Any(c => IsHiragana(c) || IsKatakana(c) || IsKanji(c));
-
-    private static bool IsHiragana(char c) => c is >= '぀' and <= 'ゟ';
-    private static bool IsKatakana(char c) => c is >= '゠' and <= 'ヿ';
-    private static bool IsKanji(char c) => c is >= '一' and <= '鿿';
 }

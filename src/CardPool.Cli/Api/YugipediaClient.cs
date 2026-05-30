@@ -8,6 +8,18 @@ public sealed class YugipediaClient : IDisposable
     private const string UserAgent = "cardpool-errata-fetcher/1.0";
     private const string ErrataPagePrefix = "Card Errata:";
     private const double MinIntervalMs = 100.0;
+    private const int MaxRetries = 3;
+    private const int RetryBaseDelayMs = 1000;
+
+    private const string JsonQuery = "query";
+    private const string JsonPages = "pages";
+    private const string JsonParse = "parse";
+    private const string JsonText = "text";
+    private const string JsonTitle = "title";
+    private const string JsonMissing = "missing";
+    private const string JsonRevisions = "revisions";
+    private const string JsonWikitext = "*";
+    private const string JsonError = "error";
 
     private readonly HttpClient _http;
     private readonly SemaphoreSlim _rateLock = new(1, 1);
@@ -19,52 +31,21 @@ public sealed class YugipediaClient : IDisposable
         _http.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
     }
 
-    public async Task<Dictionary<string, (string? Shortest, string? Latest)>> FetchErrataAsync(
+    public async Task<Dictionary<string, CardErrata>> FetchErrataAsync(
         IReadOnlyList<string> cardNames)
     {
-        var titles = string.Join("|", cardNames.Select(n => $"{ErrataPagePrefix}{n}"));
-        var url = $"{ApiUrl}?action=query&prop=revisions&rvprop=content&titles={Uri.EscapeDataString(titles)}&format=json";
+        var json = await ThrottledGetWithRetryAsync(BuildErrataQueryUrl(cardNames));
+        var result = new Dictionary<string, CardErrata>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
 
-        var json = await ThrottledGetWithRetryAsync(url);
-        var result = new Dictionary<string, (string?, string?)>(cardNames.Count, StringComparer.OrdinalIgnoreCase);
-
-        var pages = json?["query"]?["pages"]?.AsObject();
+        var pages = json?[JsonQuery]?[JsonPages]?.AsObject();
         if (pages is null)
-        {
-            foreach (var n in cardNames) result[n] = (null, null);
             return result;
-        }
 
-        var pageMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-        foreach (var (_, page) in pages)
-        {
-            if (page is null || page["missing"] is not null) continue;
-
-            var title = page["title"]?.GetValue<string>() ?? "";
-            var cardName = title.StartsWith(ErrataPagePrefix, StringComparison.OrdinalIgnoreCase)
-                ? title[ErrataPagePrefix.Length..]
-                : title;
-
-            var wikitext = page["revisions"]?[0]?["*"]?.GetValue<string>();
-            if (wikitext is null) continue;
-
-            var lores = await WikitextParser.ExtractEnglishLoresAsync(wikitext);
-            if (lores.Count > 0)
-                pageMap[cardName] = lores;
-        }
-
+        var pageMap = await ParsePageMapAsync(pages);
         foreach (var name in cardNames)
         {
             if (pageMap.TryGetValue(name, out var lores))
-            {
-                var shortest = lores.MinBy(t => t.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length);
-                var latest = lores[^1];
-                result[name] = (shortest, latest);
-            }
-            else
-            {
-                result[name] = (null, null);
-            }
+                result[name] = new(lores.MinBy(WordCounter.CountWords)!, lores[^1]);
         }
 
         return result;
@@ -72,14 +53,47 @@ public sealed class YugipediaClient : IDisposable
 
     public async Task<string?> FetchErrataHtmlAsync(string cardName)
     {
-        var url = $"{ApiUrl}?action=parse&page={Uri.EscapeDataString($"{ErrataPagePrefix}{cardName}")}&prop=text&format=json";
-        var json = await ThrottledGetWithRetryAsync(url);
-        return json?["parse"]?["text"]?["*"]?.GetValue<string>();
+        var json = await ThrottledGetWithRetryAsync(BuildHtmlUrl(cardName));
+        return json?[JsonParse]?[JsonText]?[JsonWikitext]?.GetValue<string>();
     }
+
+    private static string BuildErrataQueryUrl(IReadOnlyList<string> cardNames)
+    {
+        var titles = string.Join("|", cardNames.Select(n => $"{ErrataPagePrefix}{n}"));
+        return $"{ApiUrl}?action=query&prop=revisions&rvprop=content&titles={Uri.EscapeDataString(titles)}&format=json";
+    }
+
+    private static string BuildHtmlUrl(string cardName) =>
+        $"{ApiUrl}?action=parse&page={Uri.EscapeDataString($"{ErrataPagePrefix}{cardName}")}&prop=text&format=json";
+
+    private static async Task<Dictionary<string, List<string>>> ParsePageMapAsync(JsonObject pages)
+    {
+        var pageMap = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (_, page) in pages)
+        {
+            if (page is null || page[JsonMissing] is not null) continue;
+
+            var title = page[JsonTitle]?.GetValue<string>() ?? "";
+            var cardName = title.StartsWithIgnoreCase(ErrataPagePrefix)
+                ? title[ErrataPagePrefix.Length..]
+                : title;
+
+            var wikitext = ExtractWikitext(page);
+            if (wikitext is null) continue;
+
+            var lores = await WikitextParser.ExtractEnglishLoresAsync(wikitext);
+            if (lores.Count > 0)
+                pageMap[cardName] = lores;
+        }
+        return pageMap;
+    }
+
+    private static string? ExtractWikitext(JsonNode page) =>
+        page[JsonRevisions]?[0]?[JsonWikitext]?.GetValue<string>();
 
     private async Task<JsonNode?> ThrottledGetWithRetryAsync(string url)
     {
-        for (var attempt = 0; attempt < 3; attempt++)
+        for (var attempt = 0; attempt < MaxRetries; attempt++)
         {
             await _rateLock.WaitAsync();
             JsonNode? json;
@@ -99,11 +113,11 @@ public sealed class YugipediaClient : IDisposable
                 _rateLock.Release();
             }
 
-            if (json?["error"] is null)
+            if (json?[JsonError] is null)
                 return json;
 
-            if (attempt < 2)
-                await Task.Delay(1000 * (1 << attempt));
+            if (attempt < MaxRetries - 1)
+                await Task.Delay(RetryBaseDelayMs * (1 << attempt));
         }
 
         return null;

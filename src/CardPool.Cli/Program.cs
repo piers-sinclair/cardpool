@@ -1,3 +1,8 @@
+const string ExcludeAll = "none";
+const string ErrataModeLatest = "latest";
+const int DefaultWords = 25;
+const int UnlimitedWords = -1;
+
 var rootCommand = new RootCommand(
     "CardPool — trading card game pool analysis and export tool.\n" +
     "Fetches ~12,000 cards from YGOProDeck, applies errata history from Yugipedia,\n" +
@@ -6,38 +11,39 @@ var rootCommand = new RootCommand(
 var exportCommand = new Command("export",
     "Export all card data to Excel (.xlsx) and CSV.\n" +
     "Examples:\n" +
-    "  cpool export                              # default: ≤25 words, no-materials, no-link, no-pendulum\n" +
-    "  cpool export --words 20                   # ≤20 words\n" +
-    "  cpool export --no-materials false         # include full material text in word count\n" +
-    "  cpool export --extra-deck all             # include all Extra Deck types (including Link)\n" +
-    "  cpool export --extra-deck none            # main-deck cards only\n" +
-    "  cpool export --extra-deck fusion synchro  # Fusion + Synchro only\n" +
-    "  cpool export --no-pendulum false          # include Pendulum monsters\n" +
-    "  cpool export --words 30 --output ~/ygo    # ≤30 words, custom output dir");
+    "  cpool export                                         # default: ≤25 words, no-materials, exclude pendulum link\n" +
+    "  cpool export --words 20                              # ≤20 words\n" +
+    "  cpool export --strip-materials false                  # include full material text in word count\n" +
+    "  cpool export --exclude-types none                    # include all card types\n" +
+    "  cpool export --exclude-types fusion synchro xyz link # main-deck cards only\n" +
+    "  cpool export --exclude-types pendulum link flip      # also exclude Flip monsters\n" +
+    "  cpool export --errata-mode latest                    # use current text only (fast — no Yugipedia fetch)\n" +
+    "  cpool export --words -1                              # no word limit — export all cards\n" +
+    "  cpool export --words 30 --output ~/ygo               # ≤30 words, custom output dir");
 
 var wordsOption = new Option<int>("--words")
 {
-    Description = "Word-count threshold — cards with any printing at or below this limit are included (default: 25)",
+    Description = "Word-count threshold — cards with any printing at or below this limit are included (default: 25, use -1 for no limit)",
     DefaultValueFactory = _ => 25
 };
 
-var noMaterialsOption = new Option<bool>("--no-materials")
+var stripMaterialsOption = new Option<bool>("--strip-materials")
 {
     Description = "Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column (default: true)",
     DefaultValueFactory = _ => true
 };
 
-var extraDeckOption = new Option<string[]>("--extra-deck")
+var excludeTypesOption = new Option<string[]>("--exclude-types")
 {
-    Description = "Extra Deck types to include — valid values: all, none, fusion, synchro, xyz, link (repeatable, default: fusion synchro xyz)",
+    Description = "Exclude cards whose type contains any of these fragments (case-insensitive, repeatable). Use 'none' to include all types. Examples: pendulum, link, tuner, flip, ritual, fusion, synchro, xyz (default: pendulum link)",
     AllowMultipleArgumentsPerToken = true,
-    DefaultValueFactory = _ => ["fusion", "synchro", "xyz"]
+    DefaultValueFactory = _ => ["pendulum", "link"]
 };
 
-var noPendulumOption = new Option<bool>("--no-pendulum")
+var errataModeOption = new Option<string>("--errata-mode")
 {
-    Description = "Exclude Pendulum monsters from output (default: true)",
-    DefaultValueFactory = _ => true
+    Description = "Which card text version to evaluate for eligibility: 'shortest' = any historical printing (default), 'latest' = current printing only (skips Yugipedia fetch)",
+    DefaultValueFactory = _ => "shortest"
 };
 
 var outputOption = new Option<string>("--output")
@@ -47,67 +53,44 @@ var outputOption = new Option<string>("--output")
 };
 
 exportCommand.Add(wordsOption);
-exportCommand.Add(noMaterialsOption);
-exportCommand.Add(extraDeckOption);
-exportCommand.Add(noPendulumOption);
+exportCommand.Add(stripMaterialsOption);
+exportCommand.Add(excludeTypesOption);
+exportCommand.Add(errataModeOption);
 exportCommand.Add(outputOption);
 
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
-    var noMaterials = parseResult.GetValue(noMaterialsOption);
-    var noPendulum = parseResult.GetValue(noPendulumOption);
+    var stripMaterials = parseResult.GetValue(stripMaterialsOption);
+    var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
+    var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;
-    var extraDeckTypes = new HashSet<string>(
-        parseResult.GetValue(extraDeckOption) ?? ["all"],
-        StringComparer.OrdinalIgnoreCase);
+    var latestOnly = errataMode.EqualsIgnoreCase(ErrataModeLatest);
+    var wordLimit = words == UnlimitedWords ? int.MaxValue : words;
+    var excludeAll = excludeTypes.Length == 0 || excludeTypes.ContainsIgnoreCase(ExcludeAll);
 
-    Func<NormalizedRow, bool>? rowFilter = BuildExtraDeckFilter(extraDeckTypes);
-    if (noPendulum)
-    {
-        var baseFilter = rowFilter;
-        rowFilter = baseFilter is null
-            ? row => !row.Type.IsPendulumType()
-            : row => !row.Type.IsPendulumType() && baseFilter(row);
-    }
+    var typesSuffix = excludeAll
+        ? "_all_types"
+        : "_excl_" + string.Join("_", excludeTypes.Order(StringComparer.OrdinalIgnoreCase));
+    var errataSuffix = latestOnly ? "_latest" : "";
+    var materialsPart = stripMaterials ? "no_materials" : "with_materials";
+    var wordsPart = words == DefaultWords ? "" : words == UnlimitedWords ? "_all_words" : $"_{words}words";
+    var suffix = $"{materialsPart}{wordsPart}{typesSuffix}{errataSuffix}_export";
 
-    var defaultExtraDeckTypes = new HashSet<string>(["fusion", "synchro", "xyz"], StringComparer.OrdinalIgnoreCase);
-    var extraDeckSuffix = extraDeckTypes.Contains("all") ? ""
-        : extraDeckTypes.SetEquals(defaultExtraDeckTypes) ? "_no_link"
-        : extraDeckTypes.Contains("none") ? "_no_extra"
-        : "_" + string.Join("_", extraDeckTypes.Order());
-
-    var pendulumSuffix = noPendulum ? "_no_pendulum" : "";
-
-    var suffix = noMaterials
-        ? words == 25 ? $"no_materials{extraDeckSuffix}{pendulumSuffix}_export" : $"no_materials_{words}words{extraDeckSuffix}{pendulumSuffix}_export"
-        : words == 25 ? $"full{extraDeckSuffix}{pendulumSuffix}_export" : $"full_{words}words{extraDeckSuffix}{pendulumSuffix}_export";
+    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+    var exporter = new CardPoolExporter(
+        new YgoProDeckClient(http),
+        new YugipediaClient(http),
+        wordLimit,
+        latestOnly,
+        stripMaterials,
+        excludeTypes: excludeAll ? null : excludeTypes);
 
     Directory.CreateDirectory(outputDirectory);
-    await ExportPipeline.RunAsync(
+    await exporter.ExportAsync(
         $"{outputDirectory}/{suffix}.xlsx",
-        $"{outputDirectory}/{suffix}.csv",
-        wordLimit: words,
-        rowPostprocess: noMaterials
-            ? (row, limit) => MaterialStripper.PostprocessRow(row, limit)
-            : null,
-        rowFilter: rowFilter);
+        $"{outputDirectory}/{suffix}.csv");
 });
-
-static Func<NormalizedRow, bool>? BuildExtraDeckFilter(HashSet<string> types)
-{
-    if (types.Contains("all")) return null;
-    return row =>
-    {
-        if (!row.Type.IsExtraDeckType()) return true;
-        if (types.Contains("none")) return false;
-        if (types.Contains("fusion") && row.Type.Contains("Fusion", StringComparison.OrdinalIgnoreCase)) return true;
-        if (types.Contains("synchro") && row.Type.Contains("Synchro", StringComparison.OrdinalIgnoreCase)) return true;
-        if (types.Contains("xyz") && row.Type.Contains("XYZ", StringComparison.OrdinalIgnoreCase)) return true;
-        if (types.Contains("link") && row.Type.Contains("Link", StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
-    };
-}
 
 rootCommand.Add(exportCommand);
 
@@ -156,9 +139,7 @@ inspectCommand.SetAction(async parseResult =>
     for (var i = 0; i < erratas.Count; i++)
     {
         var t = erratas[i];
-        var wc = card.Type.IsPureNormalMonster()
-            ? 0
-            : WordCounter.CountWords(t);
+        var wc = WordCounter.CountEffectiveWords(t, card.Type);
 
         var markers = new List<string>();
         if (wc <= shortestWc)

@@ -56,10 +56,12 @@ public static class CardNormalizer
         if (firstEligibleLore is not null)
             return ParseDate(firstEligibleLore.Date ?? card.TcgDate);
 
-        if (CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit)
-            return ParseDate(card.TcgDate);
-
-        return null;
+        // firstEligibleLore is only null when resolved.Shortest is card.Desc due to the
+        // pendulum fallback — that text is not in AllLores. Use tcg_date if it's eligible,
+        // null if the card is ineligible entirely.
+        return CountWords(resolved.Shortest, card.Type, stripMaterials) <= wordLimit
+            ? ParseDate(card.TcgDate)
+            : null;
     }
 
     private static int CountWords(string text, string type, bool stripMaterials)

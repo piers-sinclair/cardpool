@@ -8,7 +8,7 @@ var exportCommand = new Command("export",
     "Examples:\n" +
     "  cpool export                                         # default: ≤25 words, no-materials, exclude pendulum link\n" +
     "  cpool export --words 20                              # ≤20 words\n" +
-    "  cpool export --no-materials false                    # include full material text in word count\n" +
+    "  cpool export --strip-materials false                  # include full material text in word count\n" +
     "  cpool export --exclude-types none                    # include all card types\n" +
     "  cpool export --exclude-types fusion synchro xyz link # main-deck cards only\n" +
     "  cpool export --exclude-types pendulum link flip      # also exclude Flip monsters\n" +
@@ -22,7 +22,7 @@ var wordsOption = new Option<int>("--words")
     DefaultValueFactory = _ => 25
 };
 
-var noMaterialsOption = new Option<bool>("--no-materials")
+var stripMaterialsOption = new Option<bool>("--strip-materials")
 {
     Description = "Strip fusion/synchro/xyz/link material requirements from effect text before counting; original materials are preserved in a separate column (default: true)",
     DefaultValueFactory = _ => true
@@ -48,7 +48,7 @@ var outputOption = new Option<string>("--output")
 };
 
 exportCommand.Add(wordsOption);
-exportCommand.Add(noMaterialsOption);
+exportCommand.Add(stripMaterialsOption);
 exportCommand.Add(excludeTypesOption);
 exportCommand.Add(errataModeOption);
 exportCommand.Add(outputOption);
@@ -56,7 +56,7 @@ exportCommand.Add(outputOption);
 exportCommand.SetAction(async parseResult =>
 {
     var words = parseResult.GetValue(wordsOption);
-    var stripMaterials = parseResult.GetValue(noMaterialsOption);
+    var stripMaterials = parseResult.GetValue(stripMaterialsOption);
     var excludeTypes = parseResult.GetValue(excludeTypesOption) ?? [];
     var errataMode = parseResult.GetValue(errataModeOption)!;
     var outputDirectory = parseResult.GetValue(outputOption)!;

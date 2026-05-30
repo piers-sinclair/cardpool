@@ -56,11 +56,11 @@ cpool export --words 25
 cpool inspect "Raiza the Storm Monarch"
 
 # Run from source (development):
-dotnet run --project src/CardPool.Cli -- export                                        # default: ≤25 words, no-materials, exclude pendulum link
+dotnet run --project src/CardPool.Cli -- export                                        # default: ≤25 words, strip-materials, exclude pendulum link
 dotnet run --project src/CardPool.Cli -- export --words 25
 dotnet run --project src/CardPool.Cli -- export --words 30
 dotnet run --project src/CardPool.Cli -- export --words -1                             # no word limit — export all cards
-dotnet run --project src/CardPool.Cli -- export --no-materials false                   # include full material text
+dotnet run --project src/CardPool.Cli -- export --strip-materials false                   # include full material text
 
 # --exclude-types: exclude cards whose type contains any of these fragments (case-insensitive, repeatable)
 # default is "pendulum link"; use "none" to include all types

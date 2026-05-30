@@ -88,22 +88,24 @@ public class CardPoolExporter
         await Parallel.ForEachAsync(
             candidates.Chunk(BatchSize),
             new ParallelOptions { MaxDegreeOfParallelism = MaxWorkers },
-            async (batch, _) =>
-            {
-                var result = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList());
-                lock (errataMap)
-                {
-                    foreach (var kvp in result)
-                        errataMap[kvp.Key] = kvp.Value;
-
-                    processed += batch.Length;
-                    if (processed % 500 == 0 || processed == candidates.Count)
-                        Console.WriteLine($"  Processed {processed}/{candidates.Count} errata lookups...");
-                }
-            });
+            ProcessBatchAsync);
 
         Console.WriteLine("Errata fetch complete.");
         return errataMap;
+
+        async ValueTask ProcessBatchAsync(YgoCard[] batch, CancellationToken _)
+        {
+            var results = await _yugipedia.FetchErrataAsync(batch.Select(c => c.Name).ToList());
+            int currentProcessed;
+            lock (errataMap)
+            {
+                foreach (var kvp in results)
+                    errataMap[kvp.Key] = kvp.Value;
+                currentProcessed = processed += batch.Length;
+            }
+            if (currentProcessed % 500 == 0 || currentProcessed == candidates.Count)
+                Console.WriteLine($"  Processed {currentProcessed}/{candidates.Count} errata lookups...");
+        }
     }
 
     private NormalizedRow BuildRow(YgoCard card, CardErrata? errata)

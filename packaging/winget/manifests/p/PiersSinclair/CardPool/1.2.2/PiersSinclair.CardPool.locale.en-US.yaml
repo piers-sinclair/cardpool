@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.9.0.schema.json
 PackageIdentifier: PiersSinclair.CardPool
 PackageVersion: 1.2.2
 PackageLocale: en-US
@@ -7,15 +8,15 @@ PackageName: CardPool
 PackageUrl: https://github.com/piers-sinclair/cardpool
 License: MIT
 LicenseUrl: https://github.com/piers-sinclair/cardpool/blob/main/LICENSE
-ShortDescription: Card pool generator for trading card game formats
+ShortDescription: Card pool generator for the 25 Format community
 Description: |-
-  CardPool fetches Yu-Gi-Oh! cards from YGOProDeck, enriches them with errata history
-  from Yugipedia, applies configurable word-count rules, and exports eligible card pools
-  to Excel/CSV. Designed for Edison format play.
+  CardPool fetches card data from YGOProDeck, enriches it with errata history from Yugipedia,
+  applies configurable word-count rules, and exports eligible card pools to Excel/CSV.
+  Built for the 25 Format — join the community at https://discord.gg/wDXgNHukb.
 Tags:
-  - yugioh
   - tcg
   - card-pool
   - cli
+  - 25-format
 ManifestType: defaultLocale
 ManifestVersion: 1.9.0

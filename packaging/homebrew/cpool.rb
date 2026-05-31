@@ -1,22 +1,18 @@
 class Cpool < Formula
-  desc "Card pool generator for trading card game formats"
+  desc "Card pool generator for the 25 Format (discord.gg/wDXgNHukb)"
   homepage "https://github.com/piers-sinclair/cardpool"
   version "1.2.2"
   license "MIT"
 
-  on_macos do
-    if Hardware::CPU.arm?
-      url "https://github.com/piers-sinclair/cardpool/releases/download/v#{version}/cpool-osx-arm64.zip"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    else
-      url "https://github.com/piers-sinclair/cardpool/releases/download/v#{version}/cpool-osx-x64.zip"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000"
-    end
-  end
-
-  on_linux do
+  if OS.mac? && Hardware::CPU.arm?
+    url "https://github.com/piers-sinclair/cardpool/releases/download/v#{version}/cpool-osx-arm64.zip"
+    sha256 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  elsif OS.mac?
+    url "https://github.com/piers-sinclair/cardpool/releases/download/v#{version}/cpool-osx-x64.zip"
+    sha256 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  else
     url "https://github.com/piers-sinclair/cardpool/releases/download/v#{version}/cpool-linux-x64.zip"
-    sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+    sha256 "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
   end
 
   def install

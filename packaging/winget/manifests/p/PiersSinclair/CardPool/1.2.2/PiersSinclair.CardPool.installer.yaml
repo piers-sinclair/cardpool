@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.9.0.schema.json
 PackageIdentifier: PiersSinclair.CardPool
 PackageVersion: 1.2.2
 InstallerLocale: en-US
@@ -9,9 +10,9 @@ NestedInstallerFiles:
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/piers-sinclair/cardpool/releases/download/v1.2.2/cpool-win-x64.zip
-    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
   - Architecture: arm64
     InstallerUrl: https://github.com/piers-sinclair/cardpool/releases/download/v1.2.2/cpool-win-arm64.zip
-    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+    InstallerSha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 ManifestType: installer
 ManifestVersion: 1.9.0

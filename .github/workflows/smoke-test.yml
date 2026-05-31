@@ -2,7 +2,7 @@ name: Package Manager Smoke Test
 
 on:
   workflow_run:
-    workflows: ["Homebrew Release"]
+    workflows: ["Release"]
     types: [completed]
   workflow_dispatch:
     inputs:

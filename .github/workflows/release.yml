@@ -79,3 +79,71 @@ jobs:
 
       - name: Push to NuGet
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  winget:
+    needs: [check, release]
+    if: needs.check.outputs.should-release == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: PiersSinclair.CardPool
+          installers-regex: 'cpool-win-(x64|arm64)\.zip$'
+          release-tag: ${{ needs.check.outputs.tag }}
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  homebrew:
+    needs: [check, release]
+    if: needs.check.outputs.should-release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout cardpool
+        uses: actions/checkout@v6
+        with:
+          path: cardpool
+
+      - name: Checkout tap
+        uses: actions/checkout@v6
+        with:
+          repository: piers-sinclair/homebrew-cpool
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Sync formula and update hashes
+        env:
+          VERSION: ${{ needs.check.outputs.version }}
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          set -euo pipefail
+          BASE="https://github.com/piers-sinclair/cardpool/releases/download/${TAG}"
+
+          get_sha256() { curl -fsSL "$1" | sha256sum | awk '{print $1}'; }
+
+          SHA_OSX_ARM64=$(get_sha256 "${BASE}/cpool-osx-arm64.zip")
+          SHA_OSX_X64=$(  get_sha256 "${BASE}/cpool-osx-x64.zip")
+          SHA_LINUX_X64=$(get_sha256 "${BASE}/cpool-linux-x64.zip")
+
+          cp cardpool/packaging/homebrew/cpool.rb tap/Formula/cpool.rb
+
+          sed -i "s/version \"[0-9.]*\"/version \"${VERSION}\"/" tap/Formula/cpool.rb
+
+          awk \
+            -v osx_arm64="${SHA_OSX_ARM64}" \
+            -v osx_x64="${SHA_OSX_X64}" \
+            -v linux_x64="${SHA_LINUX_X64}" '
+            /cpool-osx-arm64\.zip/ { print; getline; sub(/sha256 "[0-9a-f]+"/, "sha256 \"" osx_arm64 "\""); print; next }
+            /cpool-osx-x64\.zip/   { print; getline; sub(/sha256 "[0-9a-f]+"/, "sha256 \"" osx_x64   "\""); print; next }
+            /cpool-linux-x64\.zip/ { print; getline; sub(/sha256 "[0-9a-f]+"/, "sha256 \"" linux_x64  "\""); print; next }
+            { print }
+          ' tap/Formula/cpool.rb > tap/Formula/cpool.rb.tmp
+          mv tap/Formula/cpool.rb.tmp tap/Formula/cpool.rb
+
+      - name: Commit and push
+        env:
+          TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          git -C tap config user.name "github-actions[bot]"
+          git -C tap config user.email "github-actions[bot]@users.noreply.github.com"
+          git -C tap add Formula/cpool.rb
+          git -C tap commit -m "cpool ${TAG}"
+          git -C tap push

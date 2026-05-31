@@ -145,6 +145,10 @@ cpool --version   # show installed version
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
+### Releasing
+
+See [RELEASING.md](RELEASING.md) for the full release process, including how to renew the NuGet, winget, and Homebrew secrets.
+
 ### Run from source
 
 ```bash

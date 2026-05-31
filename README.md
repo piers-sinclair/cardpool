@@ -6,9 +6,9 @@
 
 Card pool analysis tool for trading card games. Fetches card data from game-specific sources, enriches it with errata history, applies word-count rules, and exports to Excel/CSV.
 
-Originally built to support 25 Format. Check out the [Discord server](https://discord.gg/wDXgNHukb) for more info!
+**Current implementation:** cards fetched from [YGOProDeck](https://ygoprodeck.com/), errata history from [Yugipedia](https://yugipedia.com/). The design supports multiple TCGs — more to follow.
 
-**Current implementation: Yu-Gi-Oh!** The goal is to support multiple TCGs — Yu-Gi-Oh! is the first. Cards are fetched from [YGOProDeck](https://ygoprodeck.com/) and enriched with errata history from [Yugipedia](https://yugipedia.com/).
+Originally built for the [25 Format](https://discord.gg/wDXgNHukb) community — come join us on Discord.
 
 The core purpose: identify cards whose **shortest known errata version** falls within a word-count threshold (default: ≤25 words).
 

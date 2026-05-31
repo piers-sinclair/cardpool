@@ -6,11 +6,11 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>cpool</ToolCommandName>
     <PackageId>CardPool</PackageId>
-    <Version>1.2.2</Version>
+    <Version>1.2.3</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Authors>Piers Sinclair</Authors>
-    <Description>Card pool generator for trading card game formats. Applies errata history and configurable criteria (e.g. word count) to export eligible card pools to Excel/CSV.</Description>
-    <PackageTags>yugioh;tcg;card-pool;format;cli</PackageTags>
+    <Description>Card pool generator for trading card game formats, originally built for the 25 Format. Applies errata history and configurable criteria (e.g. word count) to export eligible card pools to Excel/CSV. Join the community at discord.gg/wDXgNHukb.</Description>
+    <PackageTags>tcg;card-pool;25-format;cli</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/piers-sinclair/cardpool</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>

@@ -1,0 +1,50 @@
+name: Validate Packaging
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packaging/**'
+      - '.github/workflows/validate-packaging.yml'
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - '.github/workflows/validate-packaging.yml'
+  workflow_dispatch:
+
+jobs:
+  winget:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Resolve manifest version
+        id: ver
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path src/CardPool.Cli/CardPool.Cli.csproj -Pattern '<Version>(.*?)</Version>').Matches[0].Groups[1].Value
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Validate winget manifest
+        shell: pwsh
+        run: winget validate --manifest packaging/winget/manifests/p/PiersSinclair/CardPool/${{ steps.ver.outputs.version }}
+
+  homebrew:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Create temporary tap
+        run: |
+          mkdir -p /tmp/homebrew-cpool/Formula
+          cp packaging/homebrew/cpool.rb /tmp/homebrew-cpool/Formula/cpool.rb
+          git -C /tmp/homebrew-cpool init
+          git -C /tmp/homebrew-cpool -c user.email="ci@ci" -c user.name="CI" add Formula
+          git -C /tmp/homebrew-cpool -c user.email="ci@ci" -c user.name="CI" commit -m "init"
+          brew tap local/cpool /tmp/homebrew-cpool
+
+      - name: Check formula style
+        run: brew style local/cpool/cpool

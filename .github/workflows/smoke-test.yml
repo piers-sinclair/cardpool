@@ -1,0 +1,65 @@
+name: Package Manager Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Homebrew Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      test_winget:
+        description: 'Test winget install (run after winget-pkgs PR is merged)'
+        type: boolean
+        default: false
+
+jobs:
+  homebrew-macos:
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    steps:
+      - name: Install from tap
+        run: |
+          brew tap piers-sinclair/cpool
+          brew install cpool
+
+      - name: Verify version
+        run: |
+          VERSION=$(cpool --version)
+          echo "Installed version: $VERSION"
+          [[ -n "$VERSION" ]] || { echo "cpool --version returned empty output"; exit 1; }
+
+  homebrew-linux:
+    if: >
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Homebrew
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+
+      - name: Install from tap
+        run: |
+          brew tap piers-sinclair/cpool
+          brew install cpool
+
+      - name: Verify version
+        run: |
+          VERSION=$(cpool --version)
+          echo "Installed version: $VERSION"
+          [[ -n "$VERSION" ]] || { echo "cpool --version returned empty output"; exit 1; }
+
+  winget:
+    if: github.event_name == 'workflow_dispatch' && inputs.test_winget
+    runs-on: windows-latest
+    steps:
+      - name: Install via winget
+        run: winget install PiersSinclair.CardPool --accept-source-agreements --accept-package-agreements
+
+      - name: Verify version
+        run: |
+          $version = cpool --version
+          Write-Output "Installed version: $version"
+          if (-not $version) { Write-Error "cpool --version returned empty output"; exit 1 }

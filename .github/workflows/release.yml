@@ -2,14 +2,44 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - 'src/CardPool.Cli/CardPool.Cli.csproj'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
+      should-release: ${{ steps.ver.outputs.should-release }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check version
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' src/CardPool.Cli/CardPool.Cli.csproj)
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          if gh release view "${TAG}" &>/dev/null; then
+            echo "should-release=false" >> $GITHUB_OUTPUT
+          else
+            echo "should-release=true" >> $GITHUB_OUTPUT
+          fi
+
   release:
+    needs: check
+    if: needs.check.outputs.should-release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,7 +56,7 @@ jobs:
       - name: Publish all platforms
         run: |
           for rid in win-x64 win-arm64 osx-arm64 osx-x64 linux-x64; do
-            dotnet publish src/CardPool.Cli -p:PublishProfile=$rid -o dist/$rid
+            dotnet publish src/CardPool.Cli -p:PublishProfile=$rid -o dist/$rid --no-restore
           done
 
       - name: Create archives
@@ -37,8 +67,15 @@ jobs:
           zip -j cpool-osx-x64.zip   dist/osx-x64/cpool
           zip -j cpool-linux-x64.zip dist/linux-x64/cpool
 
+      - name: Pack NuGet
+        run: dotnet pack src/CardPool.Cli --configuration Release --no-restore --output ./nupkg
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.check.outputs.tag }}
           files: cpool-*.zip
           generate_release_notes: true
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

@@ -1,5 +1,5 @@
 class Cpool < Formula
-  desc "Card pool generator for the 25 Format (discord.gg/wDXgNHukb)"
+  desc "Card pool generator for trading card games, originally built for the 25 Format"
   homepage "https://github.com/piers-sinclair/cardpool"
   version "1.2.2"
   license "MIT"

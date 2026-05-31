@@ -100,19 +100,25 @@ The CLI is distributed via **.NET Global Tool** (NuGet), **winget**, **Homebrew*
 
 ### GitHub Releases (automated)
 
-Pushing a `v*.*.*` tag triggers `.github/workflows/release.yml`, which cross-compiles all five platform binaries from ubuntu-latest and publishes them as a GitHub Release:
+Merging a `<Version>` bump in `CardPool.Cli.csproj` to `main` triggers `release.yml`, which:
+1. Checks whether a GitHub Release for that version already exists — skips everything if so
+2. Cross-compiles all five platform binaries from ubuntu-latest
+3. Creates a GitHub Release tagged `v<version>` with the zips attached
+4. Pushes the NuGet package to nuget.org
 
 ```
 cpool-win-x64.zip, cpool-win-arm64.zip, cpool-osx-arm64.zip, cpool-osx-x64.zip, cpool-linux-x64.zip
 ```
 
-After the release is published, two dependent workflows fire automatically:
+After the GitHub Release is published, two dependent workflows fire automatically:
 - `winget-releaser.yml` — submits a PR to `microsoft/winget-pkgs` (requires `WINGET_TOKEN` secret)
 - `homebrew-releaser.yml` — updates `Formula/cpool.rb` in `piers-sinclair/homebrew-cpool` (requires `HOMEBREW_TAP_TOKEN` secret)
 
+`release.yml` also accepts `workflow_dispatch` for manual re-runs.
+
 ### Global Tool (NuGet)
 
-Published to nuget.org on `v*.*.*` tag push via `publish.yml` (same trigger as `release.yml`). PackageId is `CardPool`, command is `cpool`.
+Published to nuget.org as part of `release.yml` (consolidated — no separate publish workflow). PackageId is `CardPool`, command is `cpool`.
 
 ```bash
 dotnet pack src/CardPool.Cli -c Release -o dist/

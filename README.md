@@ -28,7 +28,34 @@ cpool --help
 To update: `dotnet tool update -g CardPool`  
 To remove: `dotnet tool uninstall -g CardPool`
 
-### Option B — Self-contained executable (no .NET required)
+### Option B — winget (Windows)
+
+```powershell
+winget install PiersSinclair.CardPool
+```
+
+To update: `winget upgrade PiersSinclair.CardPool`  
+To remove: `winget uninstall PiersSinclair.CardPool`
+
+### Option C — Homebrew (macOS + Linux)
+
+```bash
+brew tap piers-sinclair/cpool
+brew install cpool
+```
+
+To update: `brew upgrade cpool`  
+To remove: `brew uninstall cpool && brew untap piers-sinclair/cpool`
+
+### Option D — AUR (Arch Linux)
+
+```bash
+yay -S cpool
+```
+
+Or with any other AUR helper, or manually: `git clone https://aur.archlinux.org/cpool.git && cd cpool && makepkg -si`
+
+### Option E — Self-contained executable (direct download)
 
 Download the latest zip for your platform from the [Releases](https://github.com/piers-sinclair/cardpool/releases) page:
 
@@ -48,7 +75,7 @@ Download the latest zip for your platform from the [Releases](https://github.com
 
 To uninstall — Windows: run `uninstall.ps1`; macOS/Linux: run `bash uninstall.sh`.
 
-### Option C — Run from source
+### Option F — Run from source
 
 ```bash
 git clone https://github.com/piers-sinclair/cardpool

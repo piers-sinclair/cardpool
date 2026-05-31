@@ -1,0 +1,14 @@
+# Maintainer: Piers Sinclair <piers2307@gmail.com>
+pkgname=cpool
+pkgver=1.2.1
+pkgrel=1
+pkgdesc='Card pool generator for trading card game formats'
+arch=('x86_64')
+url='https://github.com/piers-sinclair/cardpool'
+license=('MIT')
+source_x86_64=("${pkgname}-${pkgver}.zip::https://github.com/piers-sinclair/cardpool/releases/download/v${pkgver}/cpool-linux-x64.zip")
+sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
+
+package() {
+    install -Dm755 "${srcdir}/cpool" "${pkgdir}/usr/bin/cpool"
+}

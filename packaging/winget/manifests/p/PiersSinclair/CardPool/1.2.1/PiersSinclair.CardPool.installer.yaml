@@ -1,0 +1,17 @@
+PackageIdentifier: PiersSinclair.CardPool
+PackageVersion: 1.2.1
+InstallerLocale: en-US
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+  - RelativeFilePath: cpool.exe
+    PortableCommandAlias: cpool
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/piers-sinclair/cardpool/releases/download/v1.2.1/cpool-win-x64.zip
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+  - Architecture: arm64
+    InstallerUrl: https://github.com/piers-sinclair/cardpool/releases/download/v1.2.1/cpool-win-arm64.zip
+    InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+ManifestType: installer
+ManifestVersion: 1.9.0

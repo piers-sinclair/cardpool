@@ -1,0 +1,21 @@
+PackageIdentifier: PiersSinclair.CardPool
+PackageVersion: 1.2.1
+PackageLocale: en-US
+Publisher: Piers Sinclair
+PublisherUrl: https://github.com/piers-sinclair
+PackageName: CardPool
+PackageUrl: https://github.com/piers-sinclair/cardpool
+License: MIT
+LicenseUrl: https://github.com/piers-sinclair/cardpool/blob/main/LICENSE
+ShortDescription: Card pool generator for trading card game formats
+Description: |-
+  CardPool fetches Yu-Gi-Oh! cards from YGOProDeck, enriches them with errata history
+  from Yugipedia, applies configurable word-count rules, and exports eligible card pools
+  to Excel/CSV. Designed for Edison format play.
+Tags:
+  - yugioh
+  - tcg
+  - card-pool
+  - cli
+ManifestType: defaultLocale
+ManifestVersion: 1.9.0

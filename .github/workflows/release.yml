@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish all platforms
+        run: |
+          for rid in win-x64 win-arm64 osx-arm64 osx-x64 linux-x64; do
+            dotnet publish src/CardPool.Cli -p:PublishProfile=$rid -o dist/$rid
+          done
+
+      - name: Create archives
+        run: |
+          zip -j cpool-win-x64.zip   dist/win-x64/cpool.exe
+          zip -j cpool-win-arm64.zip dist/win-arm64/cpool.exe
+          zip -j cpool-osx-arm64.zip dist/osx-arm64/cpool
+          zip -j cpool-osx-x64.zip   dist/osx-x64/cpool
+          zip -j cpool-linux-x64.zip dist/linux-x64/cpool
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: cpool-*.zip
+          generate_release_notes: true

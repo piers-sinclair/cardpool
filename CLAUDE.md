@@ -96,16 +96,49 @@ dotnet test tests/CardPool.Tests
 
 ## Distribution
 
-The CLI is packaged as both a **.NET Global Tool** and a **self-contained single-file executable**.
+The CLI is distributed via **.NET Global Tool** (NuGet), **winget**, **Homebrew**, **AUR**, and **self-contained single-file executables**.
 
-### Global Tool
+### GitHub Releases (automated)
+
+Pushing a `v*.*.*` tag triggers `.github/workflows/release.yml`, which cross-compiles all five platform binaries from ubuntu-latest and publishes them as a GitHub Release:
+
+```
+cpool-win-x64.zip, cpool-win-arm64.zip, cpool-osx-arm64.zip, cpool-osx-x64.zip, cpool-linux-x64.zip
+```
+
+After the release is published, two dependent workflows fire automatically:
+- `winget-releaser.yml` — submits a PR to `microsoft/winget-pkgs` (requires `WINGET_TOKEN` secret)
+- `homebrew-releaser.yml` — updates `Formula/cpool.rb` in `piers-sinclair/homebrew-cpool` (requires `HOMEBREW_TAP_TOKEN` secret)
+
+### Global Tool (NuGet)
+
+Published to nuget.org automatically on merge to main via `publish.yml`. PackageId is `CardPool`, command is `cpool`.
 
 ```bash
 dotnet pack src/CardPool.Cli -c Release -o dist/
 dotnet tool install -g CardPool --add-source dist/
 ```
 
-The `.nupkg` is produced by `<PackAsTool>true</PackAsTool>` in the csproj. PackageId is `CardPool`, command is `cpool`.
+The `.nupkg` is produced by `<PackAsTool>true</PackAsTool>` in the csproj.
+
+### winget (Windows)
+
+Reference manifests live in `packaging/winget/manifests/p/PiersSinclair/CardPool/<version>/`. The `winget-releaser.yml` workflow auto-submits the real manifests (with computed SHA256 hashes) to `microsoft/winget-pkgs` on each release.
+
+Package identifier: `PiersSinclair.CardPool` — installer type `zip` with nested `portable` exe, adds `cpool` to PATH.
+
+### Homebrew (macOS + Linux)
+
+The formula template lives in `packaging/homebrew/cpool.rb` and is also kept in the tap repo `piers-sinclair/homebrew-cpool` at `Formula/cpool.rb`. The `homebrew-releaser.yml` workflow updates the SHA256 hashes and version in the tap repo on each release.
+
+```bash
+brew tap piers-sinclair/cpool
+brew install cpool
+```
+
+### AUR (Arch Linux)
+
+The `PKGBUILD` and `.SRCINFO` live in `packaging/aur/`. To publish a new version, update `pkgver`, `sha256sums_x86_64`, and `.SRCINFO`, then push to `aur.archlinux.org/cpool.git`.
 
 ### Self-contained executables
 

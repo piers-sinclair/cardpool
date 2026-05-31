@@ -56,7 +56,7 @@ jobs:
       - name: Publish all platforms
         run: |
           for rid in win-x64 win-arm64 osx-arm64 osx-x64 linux-x64; do
-            dotnet publish src/CardPool.Cli -p:PublishProfile=$rid -o dist/$rid --no-restore
+            dotnet publish src/CardPool.Cli -p:PublishProfile=$rid -o dist/$rid
           done
 
       - name: Create archives

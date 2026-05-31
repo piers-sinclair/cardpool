@@ -8,13 +8,19 @@ jobs:
   homebrew:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout cardpool
+        uses: actions/checkout@v6
+        with:
+          path: cardpool
+
       - name: Checkout tap
         uses: actions/checkout@v6
         with:
           repository: piers-sinclair/homebrew-cpool
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
 
-      - name: Update formula
+      - name: Sync formula and update hashes
         env:
           VERSION: ${{ github.ref_name }}
         run: |
@@ -28,7 +34,9 @@ jobs:
           SHA_OSX_X64=$(  get_sha256 "${BASE}/cpool-osx-x64.zip")
           SHA_LINUX_X64=$(get_sha256 "${BASE}/cpool-linux-x64.zip")
 
-          sed -i "s/version \"[0-9.]*\"/version \"${VERSION}\"/" Formula/cpool.rb
+          cp cardpool/packaging/homebrew/cpool.rb tap/Formula/cpool.rb
+
+          sed -i "s/version \"[0-9.]*\"/version \"${VERSION}\"/" tap/Formula/cpool.rb
 
           awk \
             -v osx_arm64="${SHA_OSX_ARM64}" \
@@ -38,12 +46,13 @@ jobs:
             /cpool-osx-x64\.zip/   { print; getline; sub(/sha256 "[0-9a-f]+"/, "sha256 \"" osx_x64   "\""); print; next }
             /cpool-linux-x64\.zip/ { print; getline; sub(/sha256 "[0-9a-f]+"/, "sha256 \"" linux_x64  "\""); print; next }
             { print }
-          ' Formula/cpool.rb > Formula/cpool.rb.tmp
-          mv Formula/cpool.rb.tmp Formula/cpool.rb
+          ' tap/Formula/cpool.rb > tap/Formula/cpool.rb.tmp
+          mv tap/Formula/cpool.rb.tmp tap/Formula/cpool.rb
 
       - name: Commit and push
         env:
           VERSION: ${{ github.ref_name }}
+        working-directory: tap
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

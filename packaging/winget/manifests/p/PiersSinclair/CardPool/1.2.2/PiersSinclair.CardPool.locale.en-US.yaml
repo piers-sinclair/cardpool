@@ -8,7 +8,7 @@ PackageName: CardPool
 PackageUrl: https://github.com/piers-sinclair/cardpool
 License: MIT
 LicenseUrl: https://github.com/piers-sinclair/cardpool/blob/main/LICENSE
-ShortDescription: Card pool generator for trading card games
+ShortDescription: Card pool generator for trading card games — join the 25 Format community at discord.gg/wDXgNHukb
 Description: |-
   CardPool fetches card data from YGOProDeck, enriches it with errata history from Yugipedia,
   applies configurable word-count rules, and exports eligible card pools to Excel/CSV.

@@ -1,7 +1,7 @@
 class Cpool < Formula
   desc "Card pool generator for trading card game formats"
   homepage "https://github.com/piers-sinclair/cardpool"
-  version "1.2.1"
+  version "1.2.2"
   license "MIT"
 
   on_macos do

@@ -47,15 +47,7 @@ brew install cpool
 To update: `brew upgrade cpool`  
 To remove: `brew uninstall cpool && brew untap piers-sinclair/cpool`
 
-### Option D — AUR (Arch Linux)
-
-```bash
-yay -S cpool
-```
-
-Or with any other AUR helper, or manually: `git clone https://aur.archlinux.org/cpool.git && cd cpool && makepkg -si`
-
-### Option E — Self-contained executable (direct download)
+### Option D — Self-contained executable (direct download)
 
 Download the latest zip for your platform from the [Releases](https://github.com/piers-sinclair/cardpool/releases) page:
 
@@ -75,7 +67,7 @@ Download the latest zip for your platform from the [Releases](https://github.com
 
 To uninstall — Windows: run `uninstall.ps1`; macOS/Linux: run `bash uninstall.sh`.
 
-### Option F — Run from source
+### Option E — Run from source
 
 ```bash
 git clone https://github.com/piers-sinclair/cardpool

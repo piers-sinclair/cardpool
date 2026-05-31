@@ -96,7 +96,7 @@ dotnet test tests/CardPool.Tests
 
 ## Distribution
 
-The CLI is distributed via **.NET Global Tool** (NuGet), **winget**, **Homebrew**, **AUR**, and **self-contained single-file executables**.
+The CLI is distributed via **.NET Global Tool** (NuGet), **winget**, **Homebrew**, and **self-contained single-file executables**.
 
 ### GitHub Releases (automated)
 
@@ -112,7 +112,7 @@ After the release is published, two dependent workflows fire automatically:
 
 ### Global Tool (NuGet)
 
-Published to nuget.org automatically on merge to main via `publish.yml`. PackageId is `CardPool`, command is `cpool`.
+Published to nuget.org on `v*.*.*` tag push via `publish.yml` (same trigger as `release.yml`). PackageId is `CardPool`, command is `cpool`.
 
 ```bash
 dotnet pack src/CardPool.Cli -c Release -o dist/
@@ -135,10 +135,6 @@ The formula template lives in `packaging/homebrew/cpool.rb` and is also kept in 
 brew tap piers-sinclair/cpool
 brew install cpool
 ```
-
-### AUR (Arch Linux)
-
-The `PKGBUILD` and `.SRCINFO` live in `packaging/aur/`. To publish a new version, update `pkgver`, `sha256sums_x86_64`, and `.SRCINFO`, then push to `aur.archlinux.org/cpool.git`.
 
 ### Self-contained executables
 

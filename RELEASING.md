@@ -18,14 +18,14 @@ Merging a version bump triggers `release.yml`, which:
 3. Creates a GitHub Release tagged `v<version>` with the binaries attached
 4. Pushes the NuGet package to nuget.org
 
-Once the GitHub Release is published, two further workflows fire:
+Once the binaries are built and the GitHub Release is created, two further jobs run in the same workflow:
 
-- **`winget-releaser.yml`** — opens a pull request on [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) with the correct installer manifest and real SHA256 hashes. Microsoft's bot reviews and merges this within a few days, after which `winget install PiersSinclair.CardPool` works.
-- **`homebrew-releaser.yml`** — copies the formula template from `packaging/homebrew/cpool.rb`, stamps in real SHA256 hashes, and pushes to the [piers-sinclair/homebrew-cpool](https://github.com/piers-sinclair/homebrew-cpool) tap. `brew install cpool` works immediately after.
+- **`winget`** — opens a pull request on [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) with the correct installer manifest and real SHA256 hashes. Microsoft's bot reviews and merges this within a few days, after which `winget install PiersSinclair.CardPool` works.
+- **`homebrew`** — copies the formula template from `packaging/homebrew/cpool.rb`, stamps in real SHA256 hashes, and pushes to the [piers-sinclair/homebrew-cpool](https://github.com/piers-sinclair/homebrew-cpool) tap. `brew install cpool` works immediately after.
 
 ## Post-release verification
 
-Homebrew is verified automatically: `smoke-test.yml` runs after `homebrew-releaser.yml` and installs `cpool` from the tap on both macOS and Linux.
+Homebrew is verified automatically: `smoke-test.yml` triggers after `release.yml` completes and installs `cpool` from the tap on both macOS and Linux.
 
 Winget requires a manual check once the winget-pkgs PR is merged:
 
@@ -69,7 +69,7 @@ All three secrets are set at **https://github.com/piers-sinclair/cardpool/settin
 
 `packaging/homebrew/cpool.rb` in this repository is the **single source of truth** for the Homebrew formula. Never edit [piers-sinclair/homebrew-cpool](https://github.com/piers-sinclair/homebrew-cpool) directly.
 
-On each release, `homebrew-releaser.yml` copies the full formula file from this repo into the tap and replaces the placeholder SHA256 values with real hashes. Any change to the formula — description, install logic, test, URL pattern — belongs in `packaging/homebrew/cpool.rb` here and takes effect on the next release.
+On each release, the `homebrew` job in `release.yml` copies the full formula file from this repo into the tap and replaces the placeholder SHA256 values with real hashes. Any change to the formula — description, install logic, test, URL pattern — belongs in `packaging/homebrew/cpool.rb` here and takes effect on the next release.
 
 ## Packaging reference files
 

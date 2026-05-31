@@ -135,12 +135,50 @@ Package identifier: `PiersSinclair.CardPool` — installer type `zip` with neste
 
 ### Homebrew (macOS + Linux)
 
-The formula template lives in `packaging/homebrew/cpool.rb` and is also kept in the tap repo `piers-sinclair/homebrew-cpool` at `Formula/cpool.rb`. The `homebrew-releaser.yml` workflow updates the SHA256 hashes and version in the tap repo on each release.
+`packaging/homebrew/cpool.rb` in this repo is the **single source of truth** for the formula. Never edit `piers-sinclair/homebrew-cpool` directly.
+
+On each release, `homebrew-releaser.yml`:
+1. Checks out both this repo and the tap repo
+2. Copies `packaging/homebrew/cpool.rb` wholesale into `tap/Formula/cpool.rb`
+3. Stamps in the real SHA256 hashes computed from the published zip downloads
+4. Commits and pushes to `piers-sinclair/homebrew-cpool`
+
+To change anything about the formula (install logic, description, test, URL pattern) — edit `packaging/homebrew/cpool.rb` here and merge. The tap is updated automatically on the next release.
 
 ```bash
 brew tap piers-sinclair/cpool
 brew install cpool
 ```
+
+### Release secrets
+
+Three secrets are required for the automated release pipeline. All are set at:
+**https://github.com/piers-sinclair/cardpool/settings/secrets/actions**
+
+| Secret | Used by | Expires |
+|--------|---------|---------|
+| `NUGET_API_KEY` | `release.yml` → NuGet push | Check nuget.org |
+| `WINGET_TOKEN` | `winget-releaser.yml` → PR on microsoft/winget-pkgs | When PAT expires |
+| `HOMEBREW_TAP_TOKEN` | `homebrew-releaser.yml` → push to piers-sinclair/homebrew-cpool | When PAT expires |
+
+**Renewing `NUGET_API_KEY`**
+1. Go to **https://www.nuget.org/account/apikeys**
+2. Find the existing key → **Regenerate** (or **Create** a new one scoped to `CardPool`)
+3. Copy the new value → update the secret at the Actions secrets page above
+
+**Renewing `WINGET_TOKEN`**
+1. Go to **https://github.com/settings/tokens** (classic tokens)
+2. Find `winget-releaser` → **Regenerate** (keep scope: `public_repo` only)
+3. Copy the new value → update the secret
+
+**Renewing `HOMEBREW_TAP_TOKEN`**
+1. Go to **https://github.com/settings/personal-access-tokens** (fine-grained tokens)
+2. Find `homebrew-tap-releaser` → **Regenerate**
+   - Repository access: `homebrew-cpool` only
+   - Permission: **Contents** → Read and write
+3. Copy the new value → update the secret
+
+If a release workflow fails with a 401/403 error, an expired secret is the most likely cause — check the expiry dates before debugging further.
 
 ### Self-contained executables
 
